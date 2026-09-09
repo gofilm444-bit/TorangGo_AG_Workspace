@@ -32,12 +32,18 @@ importers:
 
   apps/admin-web:
     dependencies:
+      '@platform/api-client':
+        specifier: workspace:*
+        version: link:../../packages/api-client
       '@platform/config':
         specifier: workspace:*
         version: link:../../packages/config
       '@platform/shared-types':
         specifier: workspace:*
         version: link:../../packages/shared-types
+      '@platform/utils':
+        specifier: workspace:*
+        version: link:../../packages/utils
       next:
         specifier: ^16.3.4
         version: 16.3.4(@babel/core@7.29.7(supports-color@10.2.2))(@types/node@22.20.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)

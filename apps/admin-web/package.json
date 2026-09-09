@@ -1,28 +1,30 @@
 {
-    "name":  "admin-web",
-    "version":  "0.1.0",
-    "private":  true,
-    "scripts":  {
-                    "dev":  "next dev -p 3000",
-                    "build":  "next build",
-                    "start":  "next start -p 3000",
-                    "lint":  "eslint src",
-                    "typecheck":  "tsc --noEmit",
-                    "test":  "echo admin-web: no tests needed"
-                },
-    "dependencies":  {
-                         "@platform/config":  "workspace:*",
-                         "@platform/shared-types":  "workspace:*",
-                         "next":  "^16.3.4",
-                         "react":  "19.2.3",
-                         "react-dom":  "19.2.3"
-                     },
-    "devDependencies":  {
-                            "@types/node":  "^22.13.9",
-                            "@types/react":  "^19.2.2",
-                            "@types/react-dom":  "^19.2.2",
-                            "eslint":  "^9.20.0",
-                            "eslint-config-next":  "^16.3.4",
-                            "typescript":  "^5.8.2"
-                        }
+  "name": "admin-web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3000",
+    "build": "next build",
+    "start": "next start -p 3000",
+    "lint": "eslint src",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test tests/**/*.spec.mjs"
+  },
+  "dependencies": {
+    "@platform/api-client": "workspace:*",
+    "@platform/config": "workspace:*",
+    "@platform/shared-types": "workspace:*",
+    "@platform/utils": "workspace:*",
+    "next": "^16.3.4",
+    "react": "19.2.3",
+    "react-dom": "19.2.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.9",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "eslint": "^9.20.0",
+    "eslint-config-next": "^16.3.4",
+    "typescript": "^5.8.2"
+  }
 }
