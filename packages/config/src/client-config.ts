@@ -1,3 +1,5 @@
+import type { AppAudience } from '@platform/shared-types';
+
 /**
  * Client-safe configuration contracts for mobile and web applications.
  * NEVER expose backend database URLs, Redis credentials, or secrets here.
@@ -8,6 +10,7 @@ export type AppEnvironment = 'development' | 'staging' | 'production' | 'test';
 export interface ClientAppConfig {
   apiBaseUrl: string;
   appEnv: AppEnvironment;
+  audience?: AppAudience;
 }
 
 /**
@@ -35,9 +38,15 @@ export function resolveClientConfig(overrides?: Partial<ClientAppConfig>): Clien
     defaultBaseUrl
   ).replace(/\/+$/, '');
 
+  const audience = (
+    overrides?.audience ??
+    (envObj?.EXPO_PUBLIC_APP_AUDIENCE as AppAudience | undefined) ??
+    (envObj?.NEXT_PUBLIC_APP_AUDIENCE as AppAudience | undefined)
+  );
+
   return {
     apiBaseUrl: baseUrl,
     appEnv: env,
+    ...(audience ? { audience } : {}),
   };
 }
-
