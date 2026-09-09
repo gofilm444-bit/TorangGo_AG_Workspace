@@ -1,0 +1,33 @@
+{
+    "name":  "customer-mobile",
+    "version":  "0.1.0",
+    "private":  true,
+    "main":  "expo-router/entry",
+    "scripts":  {
+                    "dev":  "expo start",
+                    "start":  "expo start",
+                    "build":  "echo customer-mobile build ready",
+                    "lint":  "eslint app",
+                    "typecheck":  "tsc --noEmit",
+                    "test":  "echo customer-mobile no tests needed"
+                },
+    "dependencies":  {
+                         "@platform/config":  "workspace:*",
+                         "@platform/shared-types":  "workspace:*",
+                         "expo":  "~57.0.20",
+                         "expo-constants":  "~57.0.17",
+                         "expo-linking":  "~57.0.9",
+                         "expo-router":  "~57.0.19",
+                         "expo-status-bar":  "~57.0.1",
+                         "react":  "19.2.3",
+                         "react-native":  "0.86.3",
+                         "react-native-safe-area-context":  "~5.7.0",
+                         "react-native-screens":  "~4.26.0"
+                     },
+    "devDependencies":  {
+                            "@babel/core":  "^7.25.2",
+                            "@babel/runtime":  "^7.25.0",
+                            "@types/react":  "~19.2.2",
+                            "typescript":  "~6.0.3"
+                        }
+}
