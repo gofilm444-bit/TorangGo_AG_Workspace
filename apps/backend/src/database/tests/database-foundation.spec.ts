@@ -85,15 +85,57 @@ describe('Phase 1C Database Foundation & Persistence Suite', () => {
           // Foundation tables must exist
           assert.ok(publicTableNames.includes('outbox_events'), 'outbox_events table must exist');
           assert.ok(publicTableNames.includes('idempotency_records'), 'idempotency_records table must exist');
+          // Foundation & Phase 1G Identity/Auth tables must exist
+          const expectedTables = [
+            'outbox_events',
+            'idempotency_records',
+            'users',
+            'customer_profiles',
+            'merchant_profiles',
+            'driver_profiles',
+            'auth_sessions',
+            'refresh_tokens',
+            'admin_accounts',
+            'admin_roles',
+            'admin_permissions',
+            'admin_account_roles',
+            'admin_role_permissions',
+            'admin_recovery_codes',
+          ];
+          for (const tbl of expectedTables) {
+            assert.ok(publicTableNames.includes(tbl), `${tbl} table must exist in clean database`);
+          }
 
           // Strict scope boundary: ZERO business domain tables (users, orders, merchants, etc.)
           const businessDomainTables = publicTableNames.filter(
             (t: string) => !['outbox_events', 'idempotency_records', 'spatial_ref_sys'].includes(t),
           );
+          // Strict scope boundary: ZERO Phase 2 business domain tables (orders, carts, products, outlets, payments, etc.)
+          const allowedTables = new Set([...expectedTables, 'spatial_ref_sys']);
+          const forbiddenBusinessTables = publicTableNames.filter((t: string) => !allowedTables.has(t));
           assert.equal(
-            businessDomainTables.length,
+            forbiddenBusinessTables.length,
             0,
-            `Zero business domain tables allowed, found: ${businessDomainTables.join(', ')}`,
+            `Zero business domain tables allowed, found: ${forbiddenBusinessTables.join(', ')}`,
+          );
+
+          // Verify unique canonical phone constraint on users table
+          await testClient.query(
+            `INSERT INTO users (id, phone, status, created_at, updated_at)
+             VALUES ('018f0000-0000-7000-8000-000000000001', '+6281234567890', 'ACTIVE', NOW(), NOW());`,
+          );
+
+          await assert.rejects(
+            async () => {
+              await testClient.query(
+                `INSERT INTO users (id, phone, status, created_at, updated_at)
+                 VALUES ('018f0000-0000-7000-8000-000000000002', '+6281234567890', 'ACTIVE', NOW(), NOW());`,
+              );
+            },
+            (err: any) => {
+              assert.equal(err.code, '23505', 'PostgreSQL must reject duplicate canonical phone with 23505 unique violation');
+              return true;
+            },
           );
         } finally {
           await testClient.end();

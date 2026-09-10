@@ -8,9 +8,13 @@ import {
   StatusBadge,
   spacing,
   Divider,
+  Button,
 } from '@platform/mobile-ui';
+import { useCustomerAuth } from '../../../src/auth/auth-context.js';
 
 export default function CustomerAccountScreen() {
+  const { user, logout } = useCustomerAuth();
+
   return (
     <Screen padding="md">
       <View style={styles.header}>
@@ -18,16 +22,27 @@ export default function CustomerAccountScreen() {
           Akun Pengguna
         </AppText>
         <StatusBadge label="Mode Tamu" variant="neutral" />
+        <StatusBadge label={user ? 'Terautentikasi' : 'Belum Masuk'} variant={user ? 'success' : 'neutral'} />
       </View>
 
       <Card variant="default" style={styles.card}>
         <AppText variant="label" color="text">
           Status Akun: Belum Masuk (Unauthenticated Shell)
+          Nomor Handphone: {user?.phone ?? '-'}
         </AppText>
         <AppText variant="bodySmall" color="textSecondary" style={styles.cardText}>
           Sistem autentikasi lengkap (OTP, token identitas, dan profil pengguna)
           akan diimplementasikan pada Fase 1G sesuai spesifikasi arsitektur.
+          Status Akun: {user?.status ?? 'ACTIVE'} (Audience: CUSTOMER_APP)
         </AppText>
+        {user ? (
+          <Button
+            title="Keluar (Logout)"
+            variant="outline"
+            onPress={logout}
+            style={{ marginTop: spacing.md }}
+          />
+        ) : null}
       </Card>
 
       <SectionHeader title="Tentang Aplikasi" />

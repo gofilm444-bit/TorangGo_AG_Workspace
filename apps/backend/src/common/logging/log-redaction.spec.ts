@@ -9,6 +9,7 @@ describe('Log Redaction Suite', () => {
       cookie: 'session_id=confidential456',
       setCookie: 'remember_me=secret789',
       apiKey: 'key_live_abcdef012345',
+      csrfToken: 'csrf_secret_token_val_999',
     };
 
     const headers = {
@@ -17,6 +18,7 @@ describe('Log Redaction Suite', () => {
       COOKIE: rawSecrets.cookie,
       'Set-Cookie': rawSecrets.setCookie,
       'X-Api-Key': rawSecrets.apiKey,
+      'X-CSRF-Token': rawSecrets.csrfToken,
       'X-Request-ID': 'req-safe-uuid-123',
     };
 
@@ -28,12 +30,14 @@ describe('Log Redaction Suite', () => {
     assert.equal(redacted['COOKIE'], '[REDACTED]');
     assert.equal(redacted['Set-Cookie'], '[REDACTED]');
     assert.equal(redacted['X-Api-Key'], '[REDACTED]');
+    assert.equal(redacted['X-CSRF-Token'], '[REDACTED]');
 
     const serialized = JSON.stringify(redacted);
     assert.equal(serialized.includes(rawSecrets.auth), false);
     assert.equal(serialized.includes(rawSecrets.cookie), false);
     assert.equal(serialized.includes(rawSecrets.setCookie), false);
     assert.equal(serialized.includes(rawSecrets.apiKey), false);
+    assert.equal(serialized.includes(rawSecrets.csrfToken), false);
   });
 
   test('should redact sensitive object fields recursively with camelCase and snake_case variants', () => {
@@ -45,6 +49,11 @@ describe('Log Redaction Suite', () => {
       refreshToken: 'rt_0987654321',
       clientSecret: 'cs_xyz_secret_999',
       creditCard: '4111111111111111',
+      totpSecret: 'JBSWY3DPEHPK3PXP',
+      recoveryCode: 'ABCD-EFGH-1234',
+      passwordHash: '$argon2id$v=19$m=65536,t=3,p=4$somehash',
+      csrfSecret: 'csrf-secret-value-321',
+      encryptionKey: '0123456789abcdef0123456789abcdef',
     };
 
     const payload = {
@@ -61,6 +70,13 @@ describe('Log Redaction Suite', () => {
       clientSecret: rawSecrets.clientSecret,
       client_secret: rawSecrets.clientSecret,
       'x-api-key': 'x-api-key-val',
+      totp_secret: rawSecrets.totpSecret,
+      totpSecret: rawSecrets.totpSecret,
+      recovery_code: rawSecrets.recoveryCode,
+      recoveryCode: rawSecrets.recoveryCode,
+      password_hash: rawSecrets.passwordHash,
+      csrf_secret: rawSecrets.csrfSecret,
+      encryption_key: rawSecrets.encryptionKey,
       nested: {
         credit_card: rawSecrets.creditCard,
         publicField: 'visible_data',
@@ -87,6 +103,13 @@ describe('Log Redaction Suite', () => {
     assert.equal(redacted['clientSecret'], '[REDACTED]');
     assert.equal(redacted['client_secret'], '[REDACTED]');
     assert.equal(redacted['x-api-key'], '[REDACTED]');
+    assert.equal(redacted['totp_secret'], '[REDACTED]');
+    assert.equal(redacted['totpSecret'], '[REDACTED]');
+    assert.equal(redacted['recovery_code'], '[REDACTED]');
+    assert.equal(redacted['recoveryCode'], '[REDACTED]');
+    assert.equal(redacted['password_hash'], '[REDACTED]');
+    assert.equal(redacted['csrf_secret'], '[REDACTED]');
+    assert.equal(redacted['encryption_key'], '[REDACTED]');
     assert.equal(redacted['nested'].credit_card, '[REDACTED]');
     assert.equal(redacted['nested'].publicField, 'visible_data');
     assert.equal(redacted['nested'].arrayField[0].apiKey, '[REDACTED]');

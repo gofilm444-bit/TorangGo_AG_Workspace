@@ -8,6 +8,9 @@ export class ApiClient {
   private readonly fetchFn: typeof fetch;
   private readonly defaultTimeoutMs: number;
   private readonly autoGenerateRequestId: boolean;
+  private readonly getAuthToken?: () => string | Promise<string | null | undefined> | null | undefined;
+  private readonly getCsrfToken?: () => string | Promise<string | null | undefined> | null | undefined;
+  private readonly credentials?: RequestCredentials;
 
   constructor(config: ApiClientConfig) {
     if (!config.baseUrl) {
@@ -17,6 +20,9 @@ export class ApiClient {
     this.fetchFn = config.fetchFn ?? fetch;
     this.defaultTimeoutMs = config.defaultTimeoutMs ?? 15000;
     this.autoGenerateRequestId = config.autoGenerateRequestId ?? true;
+    this.getAuthToken = config.getAuthToken;
+    this.getCsrfToken = config.getCsrfToken;
+    this.credentials = config.credentials;
   }
 
   /**
@@ -47,6 +53,20 @@ export class ApiClient {
       headers.set('Idempotency-Key', options.idempotencyKey);
     }
 
+    // Auth Token header injection (Bearer)
+    const token =
+      options.authToken ?? (this.getAuthToken ? await this.getAuthToken() : undefined);
+    if (token && !headers.has('Authorization')) {
+      headers.set('Authorization', `Bearer ${token}`);
+    }
+
+    // CSRF Token header injection
+    const csrfToken =
+      options.csrfToken ?? (this.getCsrfToken ? await this.getCsrfToken() : undefined);
+    if (csrfToken && !headers.has('X-CSRF-Token')) {
+      headers.set('X-CSRF-Token', csrfToken);
+    }
+
     // Set JSON content-type if body is provided and not already set
     if (init.body && !headers.has('Content-Type')) {
       headers.set('Content-Type', 'application/json');
@@ -66,6 +86,7 @@ export class ApiClient {
     try {
       const response = await this.fetchFn(url, {
         ...init,
+        credentials: init.credentials ?? this.credentials,
         headers,
         signal,
       });
@@ -121,6 +142,125 @@ export class ApiClient {
    */
   async getHealth(options?: RequestOptions): Promise<ApiHealthStatus> {
     const res = await this.request<ApiHealthStatus>('/api/v1/health', { method: 'GET' }, options);
+    return res.data;
+  }
+
+  /**
+   * Request 6-digit OTP for mobile applications.
+   */
+  async requestMobileOtp(
+    body: { phone: string; audience: string; installation_id?: string },
+    options?: RequestOptions,
+  ) {
+    const res = await this.request<{ challengeId: string; resendAvailableInSeconds: number }>(
+      '/api/v1/auth/mobile/request-otp',
+      { method: 'POST', body: JSON.stringify(body) },
+      options,
+    );
+    return res.data;
+  }
+
+  /**
+   * Verify 6-digit OTP for mobile applications.
+   */
+  async verifyMobileOtp<T = unknown>(
+    body: { phone: string; audience: string; otp: string; installation_id?: string },
+    options?: RequestOptions,
+  ) {
+    const res = await this.request<T>(
+      '/api/v1/auth/mobile/verify-otp',
+      { method: 'POST', body: JSON.stringify(body) },
+      options,
+    );
+    return res.data;
+  }
+
+  /**
+   * Rotate refresh token.
+   */
+  async refreshTokens<T = unknown>(
+    body: { refresh_token: string },
+    options?: RequestOptions,
+  ) {
+    const res = await this.request<T>(
+      '/api/v1/auth/refresh',
+      { method: 'POST', body: JSON.stringify(body) },
+      options,
+    );
+    return res.data;
+  }
+
+  /**
+   * Revoke current session.
+   */
+  async logout(options?: RequestOptions) {
+    const res = await this.request<{ success: boolean }>(
+      '/api/v1/auth/logout',
+      { method: 'POST' },
+      options,
+    );
+    return res.data;
+  }
+
+  /**
+   * Revoke all sessions for authenticated principal.
+   */
+  async logoutAll(options?: RequestOptions) {
+    const res = await this.request<{ success: boolean }>(
+      '/api/v1/auth/logout-all',
+      { method: 'POST' },
+      options,
+    );
+    return res.data;
+  }
+
+  /**
+   * Retrieve identity for current session.
+   */
+  async getMe<T = unknown>(options?: RequestOptions): Promise<T> {
+    const res = await this.request<T>('/api/v1/auth/me', { method: 'GET' }, options);
+    return res.data;
+  }
+
+  /**
+   * Admin login step 1: Validate credentials and obtain MFA challenge token.
+   */
+  async adminLogin(
+    body: { identifier: string; password: string },
+    options?: RequestOptions,
+  ) {
+    const res = await this.request<{ mfaRequired: boolean; mfaChallengeToken: string }>(
+      '/api/v1/auth/admin/login',
+      { method: 'POST', body: JSON.stringify(body) },
+      options,
+    );
+    return res.data;
+  }
+
+  /**
+   * Admin login step 2: Verify TOTP / recovery code.
+   */
+  async adminMfaVerify<T = unknown>(
+    body: { mfa_challenge_token: string; code: string },
+    options?: RequestOptions,
+  ) {
+    const res = await this.request<T>(
+      '/api/v1/auth/admin/mfa/verify',
+      { method: 'POST', body: JSON.stringify(body) },
+      options,
+    );
+    return res.data;
+  }
+
+  /**
+   * Admin CSRF token retrieval / cookie refresh.
+   */
+  async adminCsrf(options?: RequestOptions) {
+    const res = await this.request<{ csrfToken: string }>(
+      '/api/v1/auth/admin/csrf',
+      { method: 'POST' },
+      options,
+    );
     return res.data;
   }
 }

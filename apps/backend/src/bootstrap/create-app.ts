@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import type { INestApplication } from '@nestjs/common';
 import helmet from 'helmet';
 import express from 'express';
+import cookieParser from 'cookie-parser';
 import { DocumentBuilder, SwaggerModule, type OpenAPIObject } from '@nestjs/swagger';
 import { AppModule } from '../app.module.js';
 import { loadAppConfig, type AppConfig } from '../config/app-config.js';
@@ -60,12 +61,15 @@ export async function createApp(options?: CreateAppOptions): Promise<{ app: INes
   app.use(express.json({ limit: config.bodyLimit }));
   app.use(express.urlencoded({ extended: true, limit: config.bodyLimit }));
 
+  // Cookie parser for secure admin session transport
+  app.use(cookieParser(config.cookieSecret));
+
   // CORS allowlist
   app.enableCors({
     origin: config.corsOrigins,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-ID', 'Idempotency-Key'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-ID', 'Idempotency-Key', 'X-CSRF-Token'],
     exposedHeaders: ['X-Request-ID', 'X-Idempotency-Replayed'],
   });
 

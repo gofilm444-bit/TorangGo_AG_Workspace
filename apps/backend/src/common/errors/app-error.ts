@@ -14,13 +14,33 @@ export class AppError extends Error {
   readonly details: Record<string, unknown>;
   override readonly cause?: unknown;
 
-  constructor(options: AppErrorOptions) {
-    super(options.message);
-    this.name = this.constructor.name;
-    this.code = options.code;
-    this.statusCode = options.statusCode ?? 500;
-    this.details = options.details ?? {};
-    this.cause = options.cause;
+  constructor(options: AppErrorOptions);
+  constructor(
+    statusCode: number,
+    code: ErrorCode | string,
+    message: string,
+    details?: Record<string, unknown>,
+  );
+  constructor(
+    optionsOrStatus: AppErrorOptions | number,
+    maybeCode?: ErrorCode | string,
+    maybeMessage?: string,
+    maybeDetails?: Record<string, unknown>,
+  ) {
+    if (typeof optionsOrStatus === 'number') {
+      super(maybeMessage ?? 'An error occurred');
+      this.name = this.constructor.name;
+      this.statusCode = optionsOrStatus;
+      this.code = (maybeCode as ErrorCode) ?? ERROR_CODES.INTERNAL_ERROR;
+      this.details = maybeDetails ?? {};
+    } else {
+      super(optionsOrStatus.message);
+      this.name = this.constructor.name;
+      this.code = optionsOrStatus.code;
+      this.statusCode = optionsOrStatus.statusCode ?? 500;
+      this.details = optionsOrStatus.details ?? {};
+      this.cause = optionsOrStatus.cause;
+    }
     Object.setPrototypeOf(this, new.target.prototype);
   }
 }

@@ -8,26 +8,67 @@ import {
   StatusBadge,
   spacing,
   Divider,
+  Button,
 } from '@platform/mobile-ui';
+import { useDriverAuth } from '../../../src/auth/auth-context.js';
 
 export default function DriverAccountScreen() {
+  const { user, logout } = useDriverAuth();
+
+  const hasProfile = !!user?.driver_profile;
+  const profileStatus = user?.driver_profile?.status ?? 'BELUM_TERSEDIA';
+  const badgeVariant =
+    profileStatus === 'APPROVED'
+      ? 'success'
+      : profileStatus === 'PENDING'
+        ? 'warning'
+        : 'neutral';
+
   return (
     <Screen padding="md">
       <View style={styles.header}>
         <AppText variant="h2" color="text">
           Akun Pengemudi
         </AppText>
-        <StatusBadge label="Mode Shell" variant="neutral" />
+        <StatusBadge label={hasProfile ? profileStatus : 'BELUM TERSEDIA'} variant={badgeVariant} />
       </View>
 
       <Card variant="default" style={styles.card}>
         <AppText variant="label" color="text">
-          Status Akun: Belum Terautentikasi (Shell Fase 1E)
+          Nomor Handphone: {user?.phone ?? '-'}
         </AppText>
-        <AppText variant="bodySmall" color="textSecondary" style={styles.cardText}>
-          Verifikasi identitas pengemudi, pendaftaran kendaraan, dan aktivasi akun
-          akan diimplementasikan pada Fase 1G.
-        </AppText>
+        {hasProfile ? (
+          <>
+            <AppText variant="bodySmall" color="textSecondary" style={styles.cardText}>
+              Nama Pengemudi: {user?.driver_profile?.full_name ?? '(Belum Terdaftar)'}
+            </AppText>
+            <AppText variant="bodySmall" color="textSecondary" style={styles.cardText}>
+              Status Akun Pengguna: {user?.status ?? 'ACTIVE'} | Status Profil: {profileStatus}
+            </AppText>
+            {profileStatus !== 'APPROVED' ? (
+              <AppText variant="caption" color="textMuted" style={{ marginTop: spacing.xs }}>
+                Catatan: Hanya profil dengan status APPROVED yang dapat menerima order dan operasional delivery di fase mendatang.
+              </AppText>
+            ) : null}
+          </>
+        ) : (
+          <View style={{ marginTop: spacing.xs }}>
+            <AppText variant="bodySmall" color="warning" style={styles.cardText}>
+              Profil driver belum tersedia. Onboarding belum dilakukan.
+            </AppText>
+            <AppText variant="caption" color="textMuted" style={{ marginTop: spacing.xs }}>
+              Pendaftaran verifikasi mitra pengemudi akan diproses pada alur onboarding Fase 2.
+            </AppText>
+          </View>
+        )}
+        {user ? (
+          <Button
+            title="Keluar (Logout)"
+            variant="outline"
+            onPress={logout}
+            style={{ marginTop: spacing.md }}
+          />
+        ) : null}
       </Card>
 
       <SectionHeader title="Spesifikasi Fondasi Driver" />

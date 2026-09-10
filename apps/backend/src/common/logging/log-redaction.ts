@@ -4,6 +4,9 @@ const SENSITIVE_NORMALIZED_HEADERS = new Set([
   'setcookie',
   'xapikey',
   'apikey',
+  'xcsrftoken',
+  'csrf',
+  'xsrf',
 ]);
 
 const SENSITIVE_NORMALIZED_KEYS = new Set([
@@ -21,6 +24,16 @@ const SENSITIVE_NORMALIZED_KEYS = new Set([
   'creditcard',
   'cardnumber',
   'cvv',
+  'totp',
+  'totpsecret',
+  'recoverycode',
+  'recoverycodes',
+  'passwordhash',
+  'csrfsecret',
+  'csrftoken',
+  'encryptionkey',
+  'tokenhash',
+  'codehash',
 ]);
 
 function normalizeKey(key: string): string {

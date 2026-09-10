@@ -36,7 +36,22 @@ export const envSchema = z.object({
     .string()
     .optional()
     .transform((val) => val === 'true' || val === '1'),
-  REDIS_URL: z.string().optional(),
+  REDIS_URL: z.string().default('redis://localhost:6379'),
+
+  // Auth & Session Configuration
+  AUTH_ISSUER: z.string().default('toranggo-auth'),
+  AUTH_ACCESS_TOKEN_TTL: z.coerce.number().int().positive().default(900),
+  AUTH_REFRESH_TOKEN_TTL: z.coerce.number().int().positive().default(604800),
+  AUTH_JWT_SECRET: z.string().default('toranggo-dev-insecure-auth-jwt-secret-key-32chars-min!'),
+  OTP_TTL_SECONDS: z.coerce.number().int().positive().default(300),
+  OTP_MAX_ATTEMPTS: z.coerce.number().int().positive().default(3),
+  OTP_RESEND_COOLDOWN_SECONDS: z.coerce.number().int().positive().default(60),
+  OTP_PROVIDER: z.enum(['development', 'mock', 'production']).default('development'),
+  OTP_HMAC_SECRET: z.string().default('toranggo-dev-otp-hmac-secret-key-32chars-min!'),
+  ADMIN_MFA_ENCRYPTION_KEY: z
+    .string()
+    .default('0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'),
+  COOKIE_SECRET: z.string().default('toranggo-dev-cookie-secret-key-32chars-min!'),
 });
 
 export type RawEnvConfig = z.input<typeof envSchema>;

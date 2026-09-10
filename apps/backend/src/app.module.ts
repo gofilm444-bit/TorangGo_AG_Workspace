@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { HealthModule } from './health/health.module.js';
+import { AuthModule } from './auth/auth.module.js';
 import { StructuredLogger } from './common/logging/logger.service.js';
 import {
   IDEMPOTENCY_STORE_TOKEN,
@@ -24,6 +25,7 @@ const config = loadAppConfig();
       },
     ]),
     HealthModule,
+    AuthModule,
   ],
   providers: [
     StructuredLogger,

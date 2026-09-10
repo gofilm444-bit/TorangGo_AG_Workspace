@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import React from 'react';
 import './globals.css';
+import { Providers } from './providers';
 
 export const metadata: Metadata = {
   title: 'TorangGo Admin',
@@ -15,7 +16,7 @@ export default function RootLayout({
   return (
     <html lang="id">
       <body>
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

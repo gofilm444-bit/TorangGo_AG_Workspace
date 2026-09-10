@@ -214,5 +214,77 @@ describe('ApiClient Foundation Suite', () => {
     assert.equal(res.data.customerInfo.fullName, 'Budi Santoso');
     assert.equal(res.data.customerInfo.phoneNumber, '+628123456789');
   });
-});
 
+  it('injects Authorization and X-CSRF-Token headers and respects credentials option', async () => {
+    let capturedAuth: string | null = null;
+    let capturedCsrf: string | null = null;
+    let capturedCredentials: RequestCredentials | undefined;
+
+    const mockFetch: typeof fetch = async (_input, init) => {
+      const headers = new Headers(init?.headers);
+      capturedAuth = headers.get('Authorization');
+      capturedCsrf = headers.get('X-CSRF-Token');
+      capturedCredentials = init?.credentials;
+
+      return new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    };
+
+    const client = new ApiClient({
+      baseUrl: 'http://localhost:3000',
+      fetchFn: mockFetch,
+      credentials: 'include',
+      getAuthToken: () => 'bearer-token-from-provider',
+      getCsrfToken: () => 'csrf-token-from-provider',
+    });
+
+    await client.logout();
+    assert.equal(capturedAuth, 'Bearer bearer-token-from-provider');
+    assert.equal(capturedCsrf, 'csrf-token-from-provider');
+    assert.equal(capturedCredentials, 'include');
+  });
+
+  it('correctly invokes mobile and admin auth endpoints', async () => {
+    const invokedPaths: string[] = [];
+
+    const mockFetch: typeof fetch = async (input, init) => {
+      const url = input.toString();
+      invokedPaths.push(`${init?.method} ${url.replace('http://localhost:3000', '')}`);
+
+      if (url.includes('/mobile/request-otp')) {
+        return new Response(
+          JSON.stringify({ challenge_id: 'chal-1', resend_available_in_seconds: 60 }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } },
+        );
+      }
+      if (url.includes('/admin/login')) {
+        return new Response(
+          JSON.stringify({ mfa_required: true, mfa_challenge_token: 'mfa-tok-1' }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } },
+        );
+      }
+      return new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    };
+
+    const client = new ApiClient({
+      baseUrl: 'http://localhost:3000',
+      fetchFn: mockFetch,
+    });
+
+    const otpRes = await client.requestMobileOtp({ phone: '+6281234567890', audience: 'CUSTOMER_APP' });
+    assert.equal(otpRes.challengeId, 'chal-1');
+    assert.equal(otpRes.resendAvailableInSeconds, 60);
+
+    const adminRes = await client.adminLogin({ identifier: 'admin', password: 'secret' });
+    assert.equal(adminRes.mfaRequired, true);
+    assert.equal(adminRes.mfaChallengeToken, 'mfa-tok-1');
+
+    assert.ok(invokedPaths.includes('POST /api/v1/auth/mobile/request-otp'));
+    assert.ok(invokedPaths.includes('POST /api/v1/auth/admin/login'));
+  });
+});

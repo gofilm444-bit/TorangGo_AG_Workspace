@@ -23,6 +23,262 @@
           "Health"
         ]
       }
+    },
+    "/api/v1/auth/mobile/request-otp": {
+      "post": {
+        "operationId": "AuthController_requestMobileOtp",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestMobileOtpDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestOtpResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Request 6-digit OTP code for mobile applications",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/mobile/verify-otp": {
+      "post": {
+        "operationId": "AuthController_verifyMobileOtp",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyMobileOtpDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MobileAuthResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Verify 6-digit OTP and obtain access and refresh tokens",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "operationId": "AuthController_refreshTokens",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshTokenDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RefreshTokenResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Rotate refresh token and obtain fresh access token",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "operationId": "AuthController_logout",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LogoutResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Revoke current session and consumed tokens",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/logout-all": {
+      "post": {
+        "operationId": "AuthController_logoutAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LogoutResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Revoke all sessions for authenticated principal",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "operationId": "AuthController_me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Retrieve safe identity details for currently authenticated principal",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/admin/login": {
+      "post": {
+        "operationId": "AuthController_adminLogin",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminLoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminLoginResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Admin login step 1: Validate credentials and initiate MFA challenge",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/admin/mfa/verify": {
+      "post": {
+        "operationId": "AuthController_adminMfaVerify",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminMfaVerifyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminMfaVerifyResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Admin login step 2: Verify TOTP/recovery code, establish session and cookies",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/admin/csrf": {
+      "post": {
+        "operationId": "AuthController_adminCsrf",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CsrfTokenResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Obtain CSRF token and refresh cookie for Admin Web",
+        "tags": [
+          "Auth"
+        ]
+      }
     }
   },
   "info": {
@@ -48,6 +304,407 @@
         },
         "required": [
           "status"
+        ]
+      },
+      "RequestMobileOtpDto": {
+        "type": "object",
+        "properties": {
+          "phone": {
+            "type": "string",
+            "description": "User phone number in international E.164 format",
+            "example": "+6281234567890"
+          },
+          "audience": {
+            "type": "string",
+            "description": "Target mobile application audience",
+            "enum": [
+              "CUSTOMER_APP",
+              "MERCHANT_APP",
+              "DRIVER_APP"
+            ],
+            "example": "CUSTOMER_APP"
+          },
+          "installation_id": {
+            "type": "string",
+            "description": "Client installation / device correlation identifier",
+            "example": "inst_abc12345678"
+          }
+        },
+        "required": [
+          "phone",
+          "audience"
+        ]
+      },
+      "RequestOtpResponseDto": {
+        "type": "object",
+        "properties": {
+          "challenge_id": {
+            "type": "string",
+            "example": "018f3a22-1234-7000-8000-abcdef012345"
+          },
+          "resend_available_in_seconds": {
+            "type": "number",
+            "example": 60
+          }
+        },
+        "required": [
+          "challenge_id",
+          "resend_available_in_seconds"
+        ]
+      },
+      "VerifyMobileOtpDto": {
+        "type": "object",
+        "properties": {
+          "phone": {
+            "type": "string",
+            "description": "User phone number in international E.164 format",
+            "example": "+6281234567890"
+          },
+          "audience": {
+            "type": "string",
+            "description": "Target mobile application audience",
+            "enum": [
+              "CUSTOMER_APP",
+              "MERCHANT_APP",
+              "DRIVER_APP"
+            ],
+            "example": "CUSTOMER_APP"
+          },
+          "otp": {
+            "type": "string",
+            "description": "Six-digit numeric OTP verification code",
+            "example": "123456"
+          },
+          "installation_id": {
+            "type": "string",
+            "description": "Client installation / device correlation identifier",
+            "example": "inst_abc12345678"
+          }
+        },
+        "required": [
+          "phone",
+          "audience",
+          "otp"
+        ]
+      },
+      "CustomerProfileSummaryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "018f3a22-1234-7000-8000-abcdef012345"
+          },
+          "name": {
+            "type": "object",
+            "example": "Budi Santoso"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "MerchantProfileSummaryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "018f3a22-1234-7000-8000-abcdef012345"
+          },
+          "business_name": {
+            "type": "object",
+            "example": "RM Manado Asli"
+          },
+          "status": {
+            "type": "string",
+            "example": "PENDING"
+          }
+        },
+        "required": [
+          "id",
+          "status"
+        ]
+      },
+      "DriverProfileSummaryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "018f3a22-1234-7000-8000-abcdef012345"
+          },
+          "full_name": {
+            "type": "object",
+            "example": "Johan Wowor"
+          },
+          "status": {
+            "type": "string",
+            "example": "PENDING"
+          }
+        },
+        "required": [
+          "id",
+          "status"
+        ]
+      },
+      "MobileUserSummaryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "018f3a22-1234-7000-8000-abcdef012345"
+          },
+          "phone": {
+            "type": "string",
+            "example": "+6281234567890"
+          },
+          "status": {
+            "type": "string",
+            "example": "ACTIVE"
+          },
+          "customer_profile": {
+            "$ref": "#/components/schemas/CustomerProfileSummaryDto"
+          },
+          "merchant_profile": {
+            "$ref": "#/components/schemas/MerchantProfileSummaryDto"
+          },
+          "driver_profile": {
+            "$ref": "#/components/schemas/DriverProfileSummaryDto"
+          }
+        },
+        "required": [
+          "id",
+          "phone",
+          "status"
+        ]
+      },
+      "MobileAuthResponseDto": {
+        "type": "object",
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          },
+          "refresh_token": {
+            "type": "string",
+            "example": "d3b07384d113edec49eaa6238ad5ff00b1d063..."
+          },
+          "token_type": {
+            "type": "string",
+            "example": "Bearer"
+          },
+          "expires_in_seconds": {
+            "type": "number",
+            "example": 900
+          },
+          "audience": {
+            "type": "string",
+            "example": "CUSTOMER_APP"
+          },
+          "user": {
+            "$ref": "#/components/schemas/MobileUserSummaryDto"
+          }
+        },
+        "required": [
+          "access_token",
+          "refresh_token",
+          "token_type",
+          "expires_in_seconds",
+          "audience",
+          "user"
+        ]
+      },
+      "RefreshTokenDto": {
+        "type": "object",
+        "properties": {
+          "refresh_token": {
+            "type": "string",
+            "description": "Opaque cryptographically high-entropy refresh token (required for mobile; optional for admin web using HttpOnly cookie)",
+            "example": "d3b07384d113edec49eaa6238ad5ff00b1d063...64chars"
+          }
+        }
+      },
+      "RefreshTokenResponseDto": {
+        "type": "object",
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          },
+          "refresh_token": {
+            "type": "string",
+            "example": "d3b07384d113edec49eaa6238ad5ff00b1d063..."
+          },
+          "token_type": {
+            "type": "string",
+            "example": "Bearer"
+          },
+          "expires_in_seconds": {
+            "type": "number",
+            "example": 900
+          },
+          "audience": {
+            "type": "string",
+            "example": "CUSTOMER_APP"
+          }
+        },
+        "required": [
+          "access_token",
+          "refresh_token",
+          "token_type",
+          "expires_in_seconds",
+          "audience"
+        ]
+      },
+      "LogoutResponseDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "required": [
+          "success"
+        ]
+      },
+      "AdminLoginDto": {
+        "type": "object",
+        "properties": {
+          "identifier": {
+            "type": "string",
+            "description": "Admin username or email address",
+            "example": "admin@toranggo.com"
+          },
+          "password": {
+            "type": "string",
+            "description": "Admin password",
+            "example": "SecureAdminPassword123!"
+          }
+        },
+        "required": [
+          "identifier",
+          "password"
+        ]
+      },
+      "AdminLoginResponseDto": {
+        "type": "object",
+        "properties": {
+          "mfa_required": {
+            "type": "boolean",
+            "example": true
+          },
+          "mfa_challenge_token": {
+            "type": "string",
+            "example": "018f3a22-1234-7000-8000-abcdef012345"
+          }
+        },
+        "required": [
+          "mfa_required",
+          "mfa_challenge_token"
+        ]
+      },
+      "AdminMfaVerifyDto": {
+        "type": "object",
+        "properties": {
+          "mfa_challenge_token": {
+            "type": "string",
+            "description": "Ephemeral MFA challenge token obtained from /login",
+            "example": "018f3a22-1234-7000-8000-abcdef012345"
+          },
+          "code": {
+            "type": "string",
+            "description": "Six-digit TOTP code or formatted recovery code",
+            "example": "123456"
+          }
+        },
+        "required": [
+          "mfa_challenge_token",
+          "code"
+        ]
+      },
+      "AdminAccountSummaryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "018f3a22-1234-7000-8000-abcdef012345"
+          },
+          "username": {
+            "type": "string",
+            "example": "admin"
+          },
+          "email": {
+            "type": "string",
+            "example": "admin@toranggo.com"
+          },
+          "roles": {
+            "example": [
+              "SUPER_ADMIN"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "permissions": {
+            "example": [
+              "admin:access",
+              "admin:manage"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "username",
+          "email",
+          "roles",
+          "permissions"
+        ]
+      },
+      "AdminMfaVerifyResponseDto": {
+        "type": "object",
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          },
+          "csrf_token": {
+            "type": "string",
+            "example": "c8f1e091..."
+          },
+          "token_type": {
+            "type": "string",
+            "example": "Bearer"
+          },
+          "expires_in_seconds": {
+            "type": "number",
+            "example": 900
+          },
+          "admin": {
+            "$ref": "#/components/schemas/AdminAccountSummaryDto"
+          }
+        },
+        "required": [
+          "access_token",
+          "csrf_token",
+          "token_type",
+          "expires_in_seconds",
+          "admin"
+        ]
+      },
+      "CsrfTokenResponseDto": {
+        "type": "object",
+        "properties": {
+          "csrf_token": {
+            "type": "string",
+            "example": "c8f1e091..."
+          }
+        },
+        "required": [
+          "csrf_token"
         ]
       }
     }
