@@ -8,7 +8,7 @@ import {
   StyleSheet,
   SafeAreaView,
 } from 'react-native';
-import { useDriverAuth } from './auth-context.js';
+import { useDriverAuth } from './auth-context';
 import { colors, spacing, radius, typography } from '@platform/mobile-ui';
 
 export function DriverAuthScreen() {

@@ -1,5 +1,5 @@
 import { createApiClient, type ApiClient } from '@platform/api-client';
-import { customerConfig } from './config.js';
+import { customerConfig } from './config';
 
 /**
  * Shared ApiClient instance configured for Customer Mobile app.

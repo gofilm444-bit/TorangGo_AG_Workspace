@@ -1,8 +1,8 @@
 import { Redirect } from 'expo-router';
 import React from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
-import { useMerchantAuth } from '../src/auth/auth-context.js';
-import { MerchantAuthScreen } from '../src/auth/auth-screen.js';
+import { useMerchantAuth } from '../src/auth/auth-context';
+import { MerchantAuthScreen } from '../src/auth/auth-screen';
 import { colors } from '@platform/mobile-ui';
 
 export default function Index() {

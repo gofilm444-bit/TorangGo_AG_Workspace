@@ -8,7 +8,7 @@ import {
   StyleSheet,
   SafeAreaView,
 } from 'react-native';
-import { useCustomerAuth } from './auth-context.js';
+import { useCustomerAuth } from './auth-context';
 import { colors, spacing, radius, typography } from '@platform/mobile-ui';
 
 export function CustomerAuthScreen() {

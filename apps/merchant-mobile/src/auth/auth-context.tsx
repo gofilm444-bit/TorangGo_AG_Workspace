@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
-import { merchantApiClient } from '../api.js';
-import { merchantSecureStorage } from './secure-storage.js';
+import { merchantApiClient } from '../api';
+import { merchantSecureStorage } from './secure-storage';
 import type { MobileAuthResponseDto, MobileUserSummaryDto } from '@platform/api-client';
 
 export type AuthStateStatus = 'idle' | 'loading' | 'otp_sent' | 'authenticated';

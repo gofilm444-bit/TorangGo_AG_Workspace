@@ -1,4 +1,22 @@
-﻿import { randomBytes } from 'node:crypto';
+function getRandomBytes(size: number): Uint8Array {
+  const bytes = new Uint8Array(size);
+  if (typeof globalThis !== 'undefined' && globalThis.crypto?.getRandomValues) {
+    globalThis.crypto.getRandomValues(bytes);
+  } else {
+    for (let i = 0; i < size; i++) {
+      bytes[i] = Math.floor(Math.random() * 256);
+    }
+  }
+  return bytes;
+}
+
+function bytesToHex(bytes: Uint8Array): string {
+  let hex = '';
+  for (let i = 0; i < bytes.length; i++) {
+    hex += bytes[i]!.toString(16).padStart(2, '0');
+  }
+  return hex;
+}
 
 let lastTimestamp = -1;
 let sequence = 0;
@@ -22,7 +40,7 @@ export function generateUuidV7(timestampMs?: number): string {
     sequence = 0;
   }
 
-  const bytes = randomBytes(16);
+  const bytes = getRandomBytes(16);
   const nowBig = BigInt(now);
 
   // 48-bit timestamp
@@ -42,7 +60,7 @@ export function generateUuidV7(timestampMs?: number): string {
   bytes[8] = 0x80 | (bytes[8]! & 0x3f);
 
   // Format as standard 8-4-4-4-12 hex string
-  const hex = bytes.toString('hex');
+  const hex = bytesToHex(bytes);
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20, 32)}`;
 }
 

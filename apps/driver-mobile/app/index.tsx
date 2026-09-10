@@ -1,8 +1,8 @@
 import { Redirect } from 'expo-router';
 import React from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
-import { useDriverAuth } from '../src/auth/auth-context.js';
-import { DriverAuthScreen } from '../src/auth/auth-screen.js';
+import { useDriverAuth } from '../src/auth/auth-context';
+import { DriverAuthScreen } from '../src/auth/auth-screen';
 import { colors } from '@platform/mobile-ui';
 
 export default function Index() {

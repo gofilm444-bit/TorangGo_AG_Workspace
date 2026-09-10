@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
-import { driverApiClient } from '../api.js';
-import { driverSecureStorage } from './secure-storage.js';
+import { driverApiClient } from '../api';
+import { driverSecureStorage } from './secure-storage';
 import type { MobileAuthResponseDto, MobileUserSummaryDto } from '@platform/api-client';
 
 export type AuthStateStatus = 'idle' | 'loading' | 'otp_sent' | 'authenticated';

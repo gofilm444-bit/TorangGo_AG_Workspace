@@ -1,5 +1,5 @@
 import { createApiClient, type ApiClient } from '@platform/api-client';
-import { merchantConfig } from './config.js';
+import { merchantConfig } from './config';
 
 /**
  * Shared ApiClient instance configured for Merchant Mobile app.

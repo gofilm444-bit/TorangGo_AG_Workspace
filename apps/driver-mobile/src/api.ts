@@ -1,5 +1,5 @@
 import { createApiClient, type ApiClient } from '@platform/api-client';
-import { driverConfig } from './config.js';
+import { driverConfig } from './config';
 
 /**
  * Shared ApiClient instance configured for Driver Mobile app.

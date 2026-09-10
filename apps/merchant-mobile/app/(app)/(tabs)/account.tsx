@@ -10,7 +10,7 @@ import {
   Divider,
   Button,
 } from '@platform/mobile-ui';
-import { useMerchantAuth } from '../../../src/auth/auth-context.js';
+import { useMerchantAuth } from '../../../src/auth/auth-context';
 
 export default function MerchantAccountScreen() {
   const { user, logout } = useMerchantAuth();

@@ -10,7 +10,7 @@ import {
   Divider,
   Button,
 } from '@platform/mobile-ui';
-import { useCustomerAuth } from '../../../src/auth/auth-context.js';
+import { useCustomerAuth } from '../../../src/auth/auth-context';
 
 export default function CustomerAccountScreen() {
   const { user, logout } = useCustomerAuth();

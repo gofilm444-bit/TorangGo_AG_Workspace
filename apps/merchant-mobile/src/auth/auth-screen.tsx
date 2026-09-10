@@ -8,7 +8,7 @@ import {
   StyleSheet,
   SafeAreaView,
 } from 'react-native';
-import { useMerchantAuth } from './auth-context.js';
+import { useMerchantAuth } from './auth-context';
 import { colors, spacing, radius, typography } from '@platform/mobile-ui';
 
 export function MerchantAuthScreen() {

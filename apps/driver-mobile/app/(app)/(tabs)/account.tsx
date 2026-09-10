@@ -10,7 +10,7 @@ import {
   Divider,
   Button,
 } from '@platform/mobile-ui';
-import { useDriverAuth } from '../../../src/auth/auth-context.js';
+import { useDriverAuth } from '../../../src/auth/auth-context';
 
 export default function DriverAccountScreen() {
   const { user, logout } = useDriverAuth();
