@@ -20,7 +20,7 @@ export default function MerchantDashboardScreen() {
             Outlet Aktif (Single Outlet)
           </AppText>
           <AppText variant="h3" color="text">
-            TorangGo Merchant Shell — Manado
+            TorangGo Mitra
           </AppText>
         </View>
         <StatusBadge label="DEMO / PLACEHOLDER" variant="neutral" />

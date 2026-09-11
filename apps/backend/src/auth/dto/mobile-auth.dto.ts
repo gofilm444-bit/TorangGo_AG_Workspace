@@ -16,12 +16,12 @@ export class RequestMobileOtpDto {
 
   @ApiProperty({
     description: 'Target mobile application audience',
-    enum: ['CUSTOMER_APP', 'MERCHANT_APP', 'DRIVER_APP'],
+    enum: ['CUSTOMER_APP', 'PARTNER_APP', 'MERCHANT_APP', 'DRIVER_APP'],
     example: 'CUSTOMER_APP',
   })
   @IsString()
-  @IsIn(['CUSTOMER_APP', 'MERCHANT_APP', 'DRIVER_APP'], {
-    message: 'audience must be CUSTOMER_APP, MERCHANT_APP, or DRIVER_APP',
+  @IsIn(['CUSTOMER_APP', 'PARTNER_APP', 'MERCHANT_APP', 'DRIVER_APP'], {
+    message: 'audience must be CUSTOMER_APP, PARTNER_APP, MERCHANT_APP, or DRIVER_APP',
   })
   audience!: AppAudience;
 
@@ -48,11 +48,11 @@ export class VerifyMobileOtpDto {
 
   @ApiProperty({
     description: 'Target mobile application audience',
-    enum: ['CUSTOMER_APP', 'MERCHANT_APP', 'DRIVER_APP'],
+    enum: ['CUSTOMER_APP', 'PARTNER_APP', 'MERCHANT_APP', 'DRIVER_APP'],
     example: 'CUSTOMER_APP',
   })
   @IsString()
-  @IsIn(['CUSTOMER_APP', 'MERCHANT_APP', 'DRIVER_APP'])
+  @IsIn(['CUSTOMER_APP', 'PARTNER_APP', 'MERCHANT_APP', 'DRIVER_APP'])
   audience!: AppAudience;
 
   @ApiProperty({

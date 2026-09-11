@@ -82,9 +82,11 @@ export const sortDirectionSchema = z.enum(['asc', 'desc']);
 
 /**
  * AppAudience schema.
+ * Supports PARTNER_APP (canonical) and MERCHANT_APP (legacy compatibility).
  */
 export const appAudienceSchema: z.ZodType<AppAudience> = z.enum([
   'CUSTOMER_APP',
+  'PARTNER_APP',
   'MERCHANT_APP',
   'DRIVER_APP',
   'ADMIN_WEB',

@@ -56,10 +56,12 @@ export type SortDirection = 'asc' | 'desc';
 
 /**
  * Platform application audience identifier.
+ * Model B establishes PARTNER_APP as the canonical audience for TorangGo Mitra,
+ * while retaining MERCHANT_APP as a supported legacy alias during migration.
  */
 export type AppAudience =
   | 'CUSTOMER_APP'
+  | 'PARTNER_APP'
   | 'MERCHANT_APP'
   | 'DRIVER_APP'
   | 'ADMIN_WEB';
-

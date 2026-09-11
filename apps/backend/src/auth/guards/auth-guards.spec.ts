@@ -36,9 +36,40 @@ describe('Authentication & Authorization Guards Specification', () => {
       assert.equal(guard.canActivate(ctx), true);
     });
 
+    it('allows access when token audience is PARTNER_APP matching required metadata', () => {
+      const reflector = new Reflector();
+      reflector.getAllAndOverride = () => ['PARTNER_APP'];
+
+      const guard = new AudienceGuard(reflector);
+      const ctx = createMockContext({
+        user: { id: 'usr-1', audience: 'PARTNER_APP' },
+      });
+
+      assert.equal(guard.canActivate(ctx), true);
+    });
+
+    it('allows access when endpoint specifies dual audience [PARTNER_APP, MERCHANT_APP]', () => {
+      const reflector = new Reflector();
+      reflector.getAllAndOverride = () => ['PARTNER_APP', 'MERCHANT_APP'];
+
+      const guard = new AudienceGuard(reflector);
+
+      // PARTNER_APP caller
+      const ctxPartner = createMockContext({
+        user: { id: 'usr-1', audience: 'PARTNER_APP' },
+      });
+      assert.equal(guard.canActivate(ctxPartner), true);
+
+      // Legacy MERCHANT_APP caller
+      const ctxMerchant = createMockContext({
+        user: { id: 'usr-2', audience: 'MERCHANT_APP' },
+      });
+      assert.equal(guard.canActivate(ctxMerchant), true);
+    });
+
     it('rejects with AUTH_AUDIENCE_MISMATCH when audience does not match', () => {
       const reflector = new Reflector();
-      reflector.getAllAndOverride = () => ['MERCHANT_APP'];
+      reflector.getAllAndOverride = () => ['PARTNER_APP'];
 
       const guard = new AudienceGuard(reflector);
       const ctx = createMockContext({

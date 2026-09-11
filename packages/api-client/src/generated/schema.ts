@@ -199,7 +199,7 @@ export interface components {
              * @example CUSTOMER_APP
              * @enum {string}
              */
-            audience: "CUSTOMER_APP" | "MERCHANT_APP" | "DRIVER_APP";
+            audience: "CUSTOMER_APP" | "PARTNER_APP" | "MERCHANT_APP" | "DRIVER_APP";
             /**
              * @description Client installation / device correlation identifier
              * @example inst_abc12345678
@@ -223,7 +223,7 @@ export interface components {
              * @example CUSTOMER_APP
              * @enum {string}
              */
-            audience: "CUSTOMER_APP" | "MERCHANT_APP" | "DRIVER_APP";
+            audience: "CUSTOMER_APP" | "PARTNER_APP" | "MERCHANT_APP" | "DRIVER_APP";
             /**
              * @description Six-digit numeric OTP verification code
              * @example 123456

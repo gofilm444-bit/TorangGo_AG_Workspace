@@ -95,8 +95,8 @@ describe('Validation Foundation Suite', () => {
   });
 
   describe('appAudienceSchema', () => {
-    it('accepts all 4 valid platform audiences', () => {
-      const audiences = ['CUSTOMER_APP', 'MERCHANT_APP', 'DRIVER_APP', 'ADMIN_WEB'] as const;
+    it('accepts all valid platform audiences including PARTNER_APP and legacy MERCHANT_APP', () => {
+      const audiences = ['CUSTOMER_APP', 'PARTNER_APP', 'MERCHANT_APP', 'DRIVER_APP', 'ADMIN_WEB'] as const;
       for (const aud of audiences) {
         assert.equal(appAudienceSchema.parse(aud), aud);
       }

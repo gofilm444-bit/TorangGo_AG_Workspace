@@ -104,7 +104,7 @@ export function MerchantAuthProvider({ children }: { children: ReactNode }) {
     try {
       const res = await merchantApiClient.requestMobileOtp({
         phone: inputPhone,
-        audience: 'MERCHANT_APP',
+        audience: 'PARTNER_APP',
       });
       setPhone(inputPhone);
       setCooldownSeconds(res.resendAvailableInSeconds || 60);
@@ -121,7 +121,7 @@ export function MerchantAuthProvider({ children }: { children: ReactNode }) {
     try {
       const res = await merchantApiClient.verifyMobileOtp<MobileAuthResponseDto>({
         phone,
-        audience: 'MERCHANT_APP',
+        audience: 'PARTNER_APP',
         otp,
       });
 

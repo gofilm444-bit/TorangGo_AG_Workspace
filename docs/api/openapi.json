@@ -319,6 +319,7 @@
             "description": "Target mobile application audience",
             "enum": [
               "CUSTOMER_APP",
+              "PARTNER_APP",
               "MERCHANT_APP",
               "DRIVER_APP"
             ],
@@ -365,6 +366,7 @@
             "description": "Target mobile application audience",
             "enum": [
               "CUSTOMER_APP",
+              "PARTNER_APP",
               "MERCHANT_APP",
               "DRIVER_APP"
             ],

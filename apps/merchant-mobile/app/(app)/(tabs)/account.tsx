@@ -28,7 +28,7 @@ export default function MerchantAccountScreen() {
     <Screen padding="md">
       <View style={styles.header}>
         <AppText variant="h2" color="text">
-          Akun Merchant
+          Akun Mitra
         </AppText>
         <StatusBadge label={hasProfile ? profileStatus : 'BELUM TERSEDIA'} variant={badgeVariant} />
       </View>
@@ -96,7 +96,7 @@ export default function MerchantAccountScreen() {
             Target Audiens
           </AppText>
           <AppText variant="label" color="primary">
-            MERCHANT_APP
+            PARTNER_APP
           </AppText>
         </View>
       </Card>

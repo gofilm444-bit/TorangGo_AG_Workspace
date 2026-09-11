@@ -106,17 +106,17 @@ describe('Phase 1G Identity & Authentication Integration Suite', () => {
       assert.equal(customerSession.driverProfile, null, 'Must NOT auto-create driver profile');
     });
 
-    it('2. Same canonical User authenticating through MERCHANT_APP without existing merchant profile succeeds with merchant_profile = null', async () => {
-      const merchantSession = await sessionService.resolveOrCreateCanonicalUser(
+    it('2. Same canonical User authenticating through PARTNER_APP without existing merchant profile succeeds with merchant_profile = null', async () => {
+      const partnerSession = await sessionService.resolveOrCreateCanonicalUser(
         canonicalPhone,
-        'MERCHANT_APP',
+        'PARTNER_APP',
       );
       assert.equal(
-        merchantSession.user.id,
+        partnerSession.user.id,
         canonicalUserId,
-        'Merchant login must resolve to the SAME canonical user',
+        'Partner login must resolve to the SAME canonical user',
       );
-      assert.equal(merchantSession.merchantProfile, null, 'Must NOT auto-create merchant profile');
+      assert.equal(partnerSession.merchantProfile, null, 'Must NOT auto-create merchant profile');
 
       // Verify in DB that no merchant profile row was inserted
       const dbMerchant = await db
@@ -128,6 +128,19 @@ describe('Phase 1G Identity & Authentication Integration Suite', () => {
       // Verify /me (getUserIdentity) reports merchant_profile = null
       const me = await sessionService.getUserIdentity(canonicalUserId);
       assert.equal(me.merchantProfile, null);
+    });
+
+    it('2b. Dual-audience compatibility: same canonical User authenticating through legacy MERCHANT_APP also succeeds with merchant_profile = null', async () => {
+      const merchantSession = await sessionService.resolveOrCreateCanonicalUser(
+        canonicalPhone,
+        'MERCHANT_APP',
+      );
+      assert.equal(
+        merchantSession.user.id,
+        canonicalUserId,
+        'Merchant login must resolve to the SAME canonical user',
+      );
+      assert.equal(merchantSession.merchantProfile, null, 'Must NOT auto-create merchant profile');
     });
 
     it('3. Same canonical User authenticating through DRIVER_APP without existing driver profile succeeds with driver_profile = null', async () => {
@@ -167,16 +180,16 @@ describe('Phase 1G Identity & Authentication Integration Suite', () => {
       });
 
       // Authentication succeeds and /me honestly reports PENDING status
-      const merchantSession = await sessionService.resolveOrCreateCanonicalUser(
+      const partnerSession = await sessionService.resolveOrCreateCanonicalUser(
         canonicalPhone,
-        'MERCHANT_APP',
+        'PARTNER_APP',
       );
-      assert.ok(merchantSession.merchantProfile);
-      assert.equal(merchantSession.merchantProfile.status, 'PENDING');
+      assert.ok(partnerSession.merchantProfile);
+      assert.equal(partnerSession.merchantProfile.status, 'PENDING');
 
       // ApprovedMerchantGuard queries database and blocks operational action
       const guard = new ApprovedMerchantGuard(db);
-      const ctx = createMockExecutionContext(canonicalUserId, 'MERCHANT_APP');
+      const ctx = createMockExecutionContext(canonicalUserId, 'PARTNER_APP');
       await assert.rejects(
         async () => guard.canActivate(ctx),
         (err: any) => {
@@ -197,7 +210,7 @@ describe('Phase 1G Identity & Authentication Integration Suite', () => {
         .where(eq(merchantProfiles.userId, canonicalUserId));
 
       const guard = new ApprovedMerchantGuard(db);
-      const ctx = createMockExecutionContext(canonicalUserId, 'MERCHANT_APP');
+      const ctx = createMockExecutionContext(canonicalUserId, 'PARTNER_APP');
       const allowed = await guard.canActivate(ctx);
       assert.equal(allowed, true);
     });
@@ -241,15 +254,17 @@ describe('Phase 1G Identity & Authentication Integration Suite', () => {
     it('7. Concurrent authentication with identical phone resolves atomically to ONE canonical User', async () => {
       const concurrentPhone = '+6281555666777';
 
-      // Concurrently authenticate across multiple apps
-      const [res1, res2, res3] = await Promise.all([
+      // Concurrently authenticate across multiple apps (including PARTNER_APP and legacy MERCHANT_APP)
+      const [res1, res2, res3, res4] = await Promise.all([
         sessionService.resolveOrCreateCanonicalUser(concurrentPhone, 'CUSTOMER_APP'),
+        sessionService.resolveOrCreateCanonicalUser(concurrentPhone, 'PARTNER_APP'),
         sessionService.resolveOrCreateCanonicalUser(concurrentPhone, 'MERCHANT_APP'),
         sessionService.resolveOrCreateCanonicalUser(concurrentPhone, 'DRIVER_APP'),
       ]);
 
       assert.equal(res1.user.id, res2.user.id);
       assert.equal(res2.user.id, res3.user.id);
+      assert.equal(res3.user.id, res4.user.id);
 
       // Verify exactly one row exists in users table
       const dbRows = await db.select().from(users).where(eq(users.phone, concurrentPhone));

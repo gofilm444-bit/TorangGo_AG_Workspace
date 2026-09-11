@@ -42,11 +42,11 @@ export function MerchantAuthScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
         <View style={styles.header}>
-          <Text style={styles.title}>TorangGo Merchant</Text>
+          <Text style={styles.title}>TorangGo Mitra</Text>
           <Text style={styles.subtitle}>
             {isOtpSent
               ? `Masukkan 6 digit kode OTP yang dikirim ke ${phone}`
-              : 'Portal Mitra Usaha TorangGo. Masuk dengan nomor handphone terdaftar.'}
+              : 'Portal Kemitraan TorangGo. Masuk dengan nomor handphone terdaftar.'}
           </Text>
         </View>
 

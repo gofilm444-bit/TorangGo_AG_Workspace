@@ -82,7 +82,8 @@ export class SessionService {
       }
 
       // 2. Customer profile auto-creation on CUSTOMER_APP login is permitted by locked identity rule.
-      // MERCHANT_APP and DRIVER_APP must NOT automatically create merchant_profiles or driver_profiles rows.
+      // PARTNER_APP, MERCHANT_APP, and DRIVER_APP must NOT automatically create merchant_profiles,
+      // service_provider_profiles, or driver_profiles rows.
       // Profile creation belongs exclusively to Phase 2 onboarding.
       if (audience === 'CUSTOMER_APP') {
         const profileId = generateUuidV7();
