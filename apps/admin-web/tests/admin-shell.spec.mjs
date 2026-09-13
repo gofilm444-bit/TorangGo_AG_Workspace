@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { resolveClientConfig } from '@platform/config';
 import { createApiClient, ApiClient } from '@platform/api-client';
 
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -109,5 +110,192 @@ describe('Admin Web Shell Foundation Suite', () => {
     assert.ok(!dashboardContent.includes('Rp 2'), 'Dashboard must not fabricate revenue amounts');
     assert.ok(!dashboardContent.includes('Rp 5'), 'Dashboard must not fabricate revenue amounts');
     assert.ok(!dashboardContent.includes('Rp 9'), 'Dashboard must not fabricate revenue amounts');
+  });
+
+  it('verifies config statically exposes NEXT_PUBLIC_API_URL without hardcoding and targets backend auth login hermetically', async () => {
+    // 1. Static inspection of apps/admin-web/src/lib/config.ts
+    const libConfigPath = path.resolve(__dirname, '../src/lib/config.ts');
+    assert.ok(fs.existsSync(libConfigPath), 'config.ts must exist');
+    const libConfigContent = fs.readFileSync(libConfigPath, 'utf-8');
+
+    assert.ok(
+      libConfigContent.includes('process.env.NEXT_PUBLIC_API_URL'),
+      'config.ts must statically access process.env.NEXT_PUBLIC_API_URL for compiler inlining',
+    );
+    assert.ok(
+      !libConfigContent.includes('4000'),
+      'config.ts must not hardcode port 4000 or specific host/port',
+    );
+
+    // Explicit hermetic environment isolation harness
+    const ISOLATED_VARS = [
+      'NEXT_PUBLIC_API_URL',
+      'NEXT_PUBLIC_APP_ENV',
+      'NEXT_PUBLIC_APP_AUDIENCE',
+      'EXPO_PUBLIC_API_URL',
+      'EXPO_PUBLIC_APP_ENV',
+      'EXPO_PUBLIC_APP_AUDIENCE',
+      'API_BASE_URL',
+      'NODE_ENV',
+    ];
+
+    const runHermetic = async (scenarioEnv, fn) => {
+      const savedEnv = new Map();
+
+      // Collect and remove all keys matching ISOLATED_VARS case-insensitively
+      for (const key of Object.keys(process.env)) {
+        for (const target of ISOLATED_VARS) {
+          if (key.toUpperCase() === target.toUpperCase()) {
+            savedEnv.set(key, process.env[key]);
+            delete process.env[key];
+          }
+        }
+      }
+
+      // Ensure exact named targets are recorded and removed
+      for (const target of ISOLATED_VARS) {
+        if (!savedEnv.has(target)) {
+          savedEnv.set(target, process.env[target]);
+        }
+        delete process.env[target];
+      }
+
+      // Apply scenario-specific overrides
+      for (const [k, v] of Object.entries(scenarioEnv)) {
+        if (v !== undefined) {
+          process.env[k] = v;
+        }
+      }
+
+      try {
+        await fn();
+      } finally {
+        // Clear all scenario overrides
+        for (const target of ISOLATED_VARS) {
+          delete process.env[target];
+        }
+        for (const key of Object.keys(process.env)) {
+          for (const target of ISOLATED_VARS) {
+            if (key.toUpperCase() === target.toUpperCase()) {
+              delete process.env[key];
+            }
+          }
+        }
+        // Restore original ambient environment
+        for (const [key, val] of savedEnv.entries()) {
+          if (val !== undefined) {
+            process.env[key] = val;
+          } else {
+            delete process.env[key];
+          }
+        }
+      }
+    };
+
+    // CASE A — Explicit API URL
+    await runHermetic(
+      {
+        NEXT_PUBLIC_API_URL: 'http://localhost:4000',
+        NEXT_PUBLIC_APP_ENV: 'development',
+      },
+      async () => {
+        const config = resolveClientConfig({
+          apiBaseUrl: process.env.NEXT_PUBLIC_API_URL || undefined,
+          appEnv: process.env.NEXT_PUBLIC_APP_ENV,
+          audience: 'ADMIN_WEB',
+        });
+        assert.equal(config.apiBaseUrl, 'http://localhost:4000');
+        assert.notEqual(config.apiBaseUrl, 'http://localhost:3000');
+      },
+    );
+
+    // CASE B — Trailing slash normalization
+    await runHermetic(
+      {
+        NEXT_PUBLIC_API_URL: 'http://localhost:4000/',
+        NEXT_PUBLIC_APP_ENV: 'development',
+      },
+      async () => {
+        const configWithSlash = resolveClientConfig({
+          apiBaseUrl: process.env.NEXT_PUBLIC_API_URL || undefined,
+          appEnv: process.env.NEXT_PUBLIC_APP_ENV,
+          audience: 'ADMIN_WEB',
+        });
+        assert.equal(configWithSlash.apiBaseUrl, 'http://localhost:4000');
+      },
+    );
+
+    // CASE C — Explicitly absent API URL (development fallback)
+    await runHermetic(
+      {
+        NEXT_PUBLIC_APP_ENV: 'development',
+      },
+      async () => {
+        // Confirm all candidate base URL variables are genuinely absent
+        assert.equal(process.env.NEXT_PUBLIC_API_URL, undefined);
+        assert.equal(process.env.EXPO_PUBLIC_API_URL, undefined);
+        assert.equal(process.env.API_BASE_URL, undefined);
+
+        const fallbackConfig = resolveClientConfig({
+          apiBaseUrl: process.env.NEXT_PUBLIC_API_URL || undefined,
+          appEnv: process.env.NEXT_PUBLIC_APP_ENV,
+          audience: 'ADMIN_WEB',
+        });
+        assert.equal(fallbackConfig.apiBaseUrl, 'http://localhost:3000');
+      },
+    );
+
+    // CASE D — Admin login URL target
+    await runHermetic(
+      {
+        NEXT_PUBLIC_API_URL: 'http://localhost:4000',
+        NEXT_PUBLIC_APP_ENV: 'development',
+      },
+      async () => {
+        let interceptedUrl = null;
+        let interceptedMethod = null;
+        let interceptedBody = null;
+
+        const mockFetch = async (url, init) => {
+          interceptedUrl = typeof url === 'string' ? url : url.toString();
+          interceptedMethod = init?.method;
+          interceptedBody = typeof init?.body === 'string' ? JSON.parse(init.body) : init?.body;
+
+          return new Response(
+            JSON.stringify({
+              mfa_required: true,
+              mfa_challenge_token: 'mock-challenge-token',
+            }),
+            {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' },
+            },
+          );
+        };
+
+        const configuredClient = createApiClient({
+          baseUrl: 'http://localhost:4000',
+          fetchFn: mockFetch,
+        });
+
+        const loginResult = await configuredClient.adminLogin({
+          identifier: 'testadmin',
+          password: 'testpassword',
+        });
+
+        assert.equal(
+          interceptedUrl,
+          'http://localhost:4000/api/v1/auth/admin/login',
+          'adminLogin must target backend login URL http://localhost:4000/api/v1/auth/admin/login',
+        );
+        assert.equal(interceptedMethod, 'POST');
+        assert.deepEqual(interceptedBody, {
+          identifier: 'testadmin',
+          password: 'testpassword',
+        });
+        assert.equal(loginResult.mfaRequired, true);
+        assert.equal(loginResult.mfaChallengeToken, 'mock-challenge-token');
+      },
+    );
   });
 });
