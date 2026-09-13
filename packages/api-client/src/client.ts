@@ -17,7 +17,7 @@ export class ApiClient {
       throw new Error('ApiClient requires a valid baseUrl');
     }
     this.baseUrl = config.baseUrl.replace(/\/+$/, '');
-    this.fetchFn = config.fetchFn ?? fetch;
+    this.fetchFn = config.fetchFn ?? ((input, init) => globalThis.fetch(input, init));
     this.defaultTimeoutMs = config.defaultTimeoutMs ?? 15000;
     this.autoGenerateRequestId = config.autoGenerateRequestId ?? true;
     this.getAuthToken = config.getAuthToken;

@@ -4,6 +4,43 @@ import { ApiClient, createApiClient } from './client.js';
 import { ApiClientError } from './error.js';
 
 describe('ApiClient Foundation Suite', () => {
+  it('invokes default fetch with the global receiver', async (t) => {
+    let calls = 0;
+    t.mock.method(globalThis, 'fetch', async function (this: unknown, ...[input, init]: Parameters<typeof fetch>) {
+      if (this !== globalThis) {
+        throw new TypeError("Failed to execute 'fetch' on 'Window': Illegal invocation");
+      }
+      calls += 1;
+      assert.equal(input, 'https://api.example.test/api/v1/health');
+      assert.equal(init?.method, 'GET');
+      return new Response(JSON.stringify({ status: 'ok' }), { status: 200 });
+    });
+
+    const client = new ApiClient({ baseUrl: 'https://api.example.test' });
+    assert.equal((await client.getHealth()).status, 'ok');
+    assert.equal(calls, 1);
+  });
+
+  it('preserves the supplied custom fetch receiver and bypasses global fetch', async (t) => {
+    t.mock.method(globalThis, 'fetch', async () => {
+      assert.fail('Custom fetch must bypass global fetch');
+    });
+    let calls = 0;
+    const customFetch: typeof fetch = async function (this: unknown, ...[input, init]: Parameters<typeof fetch>) {
+      assert.equal(this, client);
+      calls += 1;
+      assert.equal(input, 'https://api.example.test/api/v1/health');
+      assert.equal(init?.method, 'GET');
+      return new Response(JSON.stringify({ status: 'ok' }), { status: 200 });
+    };
+    const client = new ApiClient({
+      baseUrl: 'https://api.example.test',
+      fetchFn: customFetch,
+    });
+
+    assert.equal((await client.getHealth()).status, 'ok');
+    assert.equal(calls, 1);
+  });
   it('successfully retrieves health status', async () => {
     const mockFetch: typeof fetch = async (input, init) => {
       const url = input.toString();
