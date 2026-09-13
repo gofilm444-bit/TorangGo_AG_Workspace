@@ -1,6 +1,13 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "ui": "stream",
+  "globalPassThroughEnv": [
+    "NODE_ENV",
+    "TEST_DATABASE_ADMIN_URL",
+    "TEST_REDIS_URL",
+    "DATABASE_URL",
+    "REDIS_URL"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
@@ -17,7 +24,14 @@
       "dependsOn": ["^build"]
     },
     "test": {
-      "dependsOn": ["^build"]
+      "dependsOn": ["^build"],
+      "passThroughEnv": [
+        "NODE_ENV",
+        "TEST_DATABASE_ADMIN_URL",
+        "TEST_REDIS_URL",
+        "DATABASE_URL",
+        "REDIS_URL"
+      ]
     }
   }
 }

@@ -44,17 +44,33 @@ describe('Phase 1C Database Foundation & Persistence Suite', () => {
     });
 
     test('proves migrations apply successfully to an isolated empty database', async () => {
+      const adminUrlString =
+        process.env.TEST_DATABASE_ADMIN_URL ??
+        (() => {
+          if (process.env.DATABASE_URL) {
+            const u = new URL(process.env.DATABASE_URL);
+            u.pathname = '/postgres';
+            return u.toString();
+          }
+          throw new Error('TEST_DATABASE_ADMIN_URL is required for database foundation migration tests');
+        })();
+
+      const testDbName = `toranggo_test_empty_mig_${Date.now()}_${process.pid}_${Math.random().toString(36).substring(2, 8)}`;
+      assert.ok(testDbName.startsWith('toranggo_test_'));
+      assert.notEqual(testDbName, 'toranggo_dev');
+      assert.notEqual(testDbName, 'postgres');
+
+      const isolatedParsed = new URL(adminUrlString);
+      isolatedParsed.pathname = `/${testDbName}`;
+      const isolatedUrl = isolatedParsed.toString();
+
       const adminClient = new pg.Client({
-        connectionString: 'postgresql://postgres:postgres@localhost:5433/postgres',
+        connectionString: adminUrlString,
       });
       await adminClient.connect();
-      const testDbName = 'toranggo_test_empty_migration';
 
       try {
-        await adminClient.query(`DROP DATABASE IF EXISTS ${testDbName};`);
-        await adminClient.query(`CREATE DATABASE ${testDbName};`);
-
-        const isolatedUrl = `postgresql://postgres:postgres@localhost:5433/${testDbName}`;
+        await adminClient.query(`CREATE DATABASE "${testDbName}";`);
         await runMigrations(isolatedUrl);
 
         const testClient = new pg.Client({ connectionString: isolatedUrl });
@@ -141,8 +157,17 @@ describe('Phase 1C Database Foundation & Persistence Suite', () => {
           await testClient.end();
         }
       } finally {
-        await adminClient.query(`DROP DATABASE IF EXISTS ${testDbName};`);
-        await adminClient.end();
+        try {
+          await adminClient.query(
+            `SELECT pg_terminate_backend(pid)
+             FROM pg_stat_activity
+             WHERE datname = $1 AND pid <> pg_backend_pid();`,
+            [testDbName],
+          );
+          await adminClient.query(`DROP DATABASE IF EXISTS "${testDbName}";`);
+        } finally {
+          await adminClient.end();
+        }
       }
     });
   });
