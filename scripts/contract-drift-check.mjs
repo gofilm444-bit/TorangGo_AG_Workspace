@@ -9,6 +9,10 @@ const tempOpenApiPath = resolve(rootDir, 'docs/api/openapi.temp.json');
 const schemaPath = resolve(rootDir, 'packages/api-client/src/generated/schema.ts');
 const tempSchemaPath = resolve(rootDir, 'packages/api-client/src/generated/schema.temp.ts');
 
+export function normalizeComparableText(value) {
+  return value.replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
+}
+
 export function checkDrift() {
   console.log('Running contract drift check...');
 
@@ -31,8 +35,8 @@ export function checkDrift() {
     process.exit(1);
   }
 
-  const existingOpenApi = readFileSync(openApiPath, 'utf8').trim();
-  const freshOpenApi = readFileSync(tempOpenApiPath, 'utf8').trim();
+  const existingOpenApi = normalizeComparableText(readFileSync(openApiPath, 'utf8'));
+  const freshOpenApi = normalizeComparableText(readFileSync(tempOpenApiPath, 'utf8'));
 
   if (existingOpenApi !== freshOpenApi) {
     console.error('❌ Contract drift detected: docs/api/openapi.json is out of sync with backend implementation.');
@@ -53,8 +57,8 @@ export function checkDrift() {
     process.exit(1);
   }
 
-  const existingSchema = existsSync(schemaPath) ? readFileSync(schemaPath, 'utf8').trim() : '';
-  const freshSchema = readFileSync(tempSchemaPath, 'utf8').trim();
+  const existingSchema = existsSync(schemaPath) ? normalizeComparableText(readFileSync(schemaPath, 'utf8')) : '';
+  const freshSchema = normalizeComparableText(readFileSync(tempSchemaPath, 'utf8'));
 
   cleanup();
 
