@@ -324,4 +324,36 @@ describe('ApiClient Foundation Suite', () => {
     assert.ok(invokedPaths.includes('POST /api/v1/auth/mobile/request-otp'));
     assert.ok(invokedPaths.includes('POST /api/v1/auth/admin/login'));
   });
+
+  it('retrieves platform operational overview via getAdminOverview', async () => {
+    const mockOverview = {
+      users: { total: 42 },
+      merchants: { total: 10, pending: 3, approved: 5, rejected: 1, suspended: 1 },
+      drivers: { total: 15, pending: 4, approved: 9, rejected: 1, suspended: 1 },
+    };
+
+    const mockFetch: typeof fetch = async (input, init) => {
+      const url = input.toString();
+      assert.ok(url.endsWith('/api/v1/admin/overview'));
+      assert.equal(init?.method, 'GET');
+
+      return new Response(JSON.stringify(mockOverview), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    };
+
+    const client = new ApiClient({
+      baseUrl: 'http://localhost:3000',
+      fetchFn: mockFetch,
+    });
+
+    const result = await client.getAdminOverview();
+    assert.deepEqual(result, mockOverview);
+    assert.equal(result.users.total, 42);
+    assert.equal(result.merchants.pending, 3);
+    assert.equal(result.merchants.approved, 5);
+    assert.equal(result.drivers.pending, 4);
+    assert.equal(result.drivers.approved, 9);
+  });
 });

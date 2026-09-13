@@ -5,10 +5,15 @@ import { eq } from 'drizzle-orm';
 import { loadAppConfig } from '../config/app-config.js';
 import { AdminCryptoService } from '../auth/admin/admin-crypto.service.js';
 import {
+  bootstrapAdminRbac,
+  assignAdminRole,
+  SUPER_ADMIN_ROLE_NAME,
+} from '../auth/admin/admin-rbac.js';
+import {
   adminAccounts,
-  adminAccountRoles,
   adminRecoveryCodes,
 } from '../database/schema/identity.js';
+
 import { generateUuidV7 } from '@platform/utils';
 
 /**
@@ -66,39 +71,8 @@ async function provisionAdmin() {
 
     const adminId = generateUuidV7();
 
-    // 1. Create or ensure default super_admin role and permissions
-    const superAdminRoleId = generateUuidV7();
-
-    await pool.query(
-      `INSERT INTO admin_roles (id, name, description, created_at)
-       VALUES ($1, 'SUPER_ADMIN', 'Platform Super Administrator with full privileges', NOW())
-       ON CONFLICT (name) DO NOTHING;`,
-      [superAdminRoleId],
-    );
-
-    const roleRow = await pool.query(`SELECT id FROM admin_roles WHERE name = 'SUPER_ADMIN';`);
-    const activeRoleId = roleRow.rows[0].id;
-
-    const basePermissions = ['admin:read', 'admin:write', 'admin:ops', 'admin:access'];
-    for (const code of basePermissions) {
-      const pId = generateUuidV7();
-      await pool.query(
-        `INSERT INTO admin_permissions (id, code, description, created_at)
-         VALUES ($1, $2, $3, NOW())
-         ON CONFLICT (code) DO NOTHING;`,
-        [pId, code, `Permission for ${code}`],
-      );
-
-      const pRow = await pool.query(`SELECT id FROM admin_permissions WHERE code = $1;`, [code]);
-      const activePermId = pRow.rows[0].id;
-
-      await pool.query(
-        `INSERT INTO admin_role_permissions (role_id, permission_id)
-         VALUES ($1, $2)
-         ON CONFLICT DO NOTHING;`,
-        [activeRoleId, activePermId],
-      );
-    }
+    // 1. Ensure default super_admin role and canonical permissions are bootstrapped
+    await bootstrapAdminRbac(pool);
 
     // 2. Insert admin account
     await db.insert(adminAccounts).values({
@@ -113,11 +87,8 @@ async function provisionAdmin() {
       updatedAt: new Date(),
     });
 
-    // 3. Assign SUPER_ADMIN role
-    await db.insert(adminAccountRoles).values({
-      adminId,
-      roleId: activeRoleId,
-    });
+    // 3. Assign SUPER_ADMIN role to newly provisioned admin
+    await assignAdminRole(pool, adminId, SUPER_ADMIN_ROLE_NAME);
 
     // 4. Insert recovery codes
     for (const codeHash of hashedCodes) {

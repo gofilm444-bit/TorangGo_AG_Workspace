@@ -279,6 +279,39 @@
           "Auth"
         ]
       }
+    },
+    "/api/v1/admin/overview": {
+      "get": {
+        "operationId": "AdminController_getOverview",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminOverviewResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated session"
+          },
+          "403": {
+            "description": "Forbidden: Missing admin:access / admin:read permissions or non-ADMIN_WEB audience"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Retrieve platform operational overview counts",
+        "tags": [
+          "Admin"
+        ]
+      }
     }
   },
   "info": {
@@ -707,6 +740,112 @@
         },
         "required": [
           "csrf_token"
+        ]
+      },
+      "AdminOverviewUsersDto": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "number",
+            "example": 0,
+            "description": "Total registered user accounts"
+          }
+        },
+        "required": [
+          "total"
+        ]
+      },
+      "AdminOverviewMerchantsDto": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "number",
+            "example": 0,
+            "description": "Total registered merchant profiles"
+          },
+          "pending": {
+            "type": "number",
+            "example": 0,
+            "description": "Merchants pending verification"
+          },
+          "approved": {
+            "type": "number",
+            "example": 0,
+            "description": "Approved active merchants"
+          },
+          "rejected": {
+            "type": "number",
+            "example": 0,
+            "description": "Rejected merchant applications"
+          },
+          "suspended": {
+            "type": "number",
+            "example": 0,
+            "description": "Suspended merchant accounts"
+          }
+        },
+        "required": [
+          "total",
+          "pending",
+          "approved",
+          "rejected",
+          "suspended"
+        ]
+      },
+      "AdminOverviewDriversDto": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "number",
+            "example": 0,
+            "description": "Total registered driver profiles"
+          },
+          "pending": {
+            "type": "number",
+            "example": 0,
+            "description": "Drivers pending verification"
+          },
+          "approved": {
+            "type": "number",
+            "example": 0,
+            "description": "Approved active drivers"
+          },
+          "rejected": {
+            "type": "number",
+            "example": 0,
+            "description": "Rejected driver applications"
+          },
+          "suspended": {
+            "type": "number",
+            "example": 0,
+            "description": "Suspended driver accounts"
+          }
+        },
+        "required": [
+          "total",
+          "pending",
+          "approved",
+          "rejected",
+          "suspended"
+        ]
+      },
+      "AdminOverviewResponseDto": {
+        "type": "object",
+        "properties": {
+          "users": {
+            "$ref": "#/components/schemas/AdminOverviewUsersDto"
+          },
+          "merchants": {
+            "$ref": "#/components/schemas/AdminOverviewMerchantsDto"
+          },
+          "drivers": {
+            "$ref": "#/components/schemas/AdminOverviewDriversDto"
+          }
+        },
+        "required": [
+          "users",
+          "merchants",
+          "drivers"
         ]
       }
     }

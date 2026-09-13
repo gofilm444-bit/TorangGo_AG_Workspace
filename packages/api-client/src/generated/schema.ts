@@ -177,6 +177,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Retrieve platform operational overview counts */
+        get: operations["AdminController_getOverview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -369,6 +386,72 @@ export interface components {
         CsrfTokenResponseDto: {
             /** @example c8f1e091... */
             csrf_token: string;
+        };
+        AdminOverviewUsersDto: {
+            /**
+             * @description Total registered user accounts
+             * @example 0
+             */
+            total: number;
+        };
+        AdminOverviewMerchantsDto: {
+            /**
+             * @description Total registered merchant profiles
+             * @example 0
+             */
+            total: number;
+            /**
+             * @description Merchants pending verification
+             * @example 0
+             */
+            pending: number;
+            /**
+             * @description Approved active merchants
+             * @example 0
+             */
+            approved: number;
+            /**
+             * @description Rejected merchant applications
+             * @example 0
+             */
+            rejected: number;
+            /**
+             * @description Suspended merchant accounts
+             * @example 0
+             */
+            suspended: number;
+        };
+        AdminOverviewDriversDto: {
+            /**
+             * @description Total registered driver profiles
+             * @example 0
+             */
+            total: number;
+            /**
+             * @description Drivers pending verification
+             * @example 0
+             */
+            pending: number;
+            /**
+             * @description Approved active drivers
+             * @example 0
+             */
+            approved: number;
+            /**
+             * @description Rejected driver applications
+             * @example 0
+             */
+            rejected: number;
+            /**
+             * @description Suspended driver accounts
+             * @example 0
+             */
+            suspended: number;
+        };
+        AdminOverviewResponseDto: {
+            users: components["schemas"]["AdminOverviewUsersDto"];
+            merchants: components["schemas"]["AdminOverviewMerchantsDto"];
+            drivers: components["schemas"]["AdminOverviewDriversDto"];
         };
     };
     responses: never;
@@ -585,6 +668,39 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["CsrfTokenResponseDto"];
                 };
+            };
+        };
+    };
+    AdminController_getOverview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminOverviewResponseDto"];
+                };
+            };
+            /** @description Unauthenticated session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden: Missing admin:access / admin:read permissions or non-ADMIN_WEB audience */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

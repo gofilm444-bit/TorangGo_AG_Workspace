@@ -76,3 +76,10 @@ export interface AdminMfaVerifyResponseDto {
   admin: AdminUserSummaryDto;
   csrfToken: string;
 }
+
+import type { components } from './generated/schema.js';
+
+export type AdminOverviewUsersDto = components['schemas']['AdminOverviewUsersDto'];
+export type AdminOverviewMerchantsDto = components['schemas']['AdminOverviewMerchantsDto'];
+export type AdminOverviewDriversDto = components['schemas']['AdminOverviewDriversDto'];
+export type AdminOverviewResponseDto = components['schemas']['AdminOverviewResponseDto'];

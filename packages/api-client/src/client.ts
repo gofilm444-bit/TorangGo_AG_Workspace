@@ -1,7 +1,14 @@
 import type { ApiHealthStatus } from '@platform/shared-types';
 import { generateUuidV7, snakeToCamel } from '@platform/utils';
 import { ApiClientError } from './error.js';
-import type { ApiClientConfig, RequestOptions, ApiResponse } from './types.js';
+import type {
+  ApiClientConfig,
+  RequestOptions,
+  ApiResponse,
+  AdminOverviewResponseDto,
+} from './types.js';
+
+
 
 export class ApiClient {
   private readonly baseUrl: string;
@@ -263,7 +270,20 @@ export class ApiClient {
     );
     return res.data;
   }
+
+  /**
+   * Retrieve platform operational overview counts for Admin Web.
+   */
+  async getAdminOverview(options?: RequestOptions): Promise<AdminOverviewResponseDto> {
+    const res = await this.request<AdminOverviewResponseDto>(
+      '/api/v1/admin/overview',
+      { method: 'GET' },
+      options,
+    );
+    return res.data;
+  }
 }
+
 
 export function createApiClient(config: ApiClientConfig): ApiClient {
   return new ApiClient(config);

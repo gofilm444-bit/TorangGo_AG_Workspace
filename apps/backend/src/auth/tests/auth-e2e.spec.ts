@@ -9,7 +9,6 @@ import type { DrizzleDb } from '../../database/transaction/transaction.service.j
 import * as schema from '../../database/schema/index.js';
 import {
   users,
-  customerProfiles,
   merchantProfiles,
   driverProfiles,
   authSessions,
@@ -27,8 +26,17 @@ import { generateUuidV7 } from '@platform/utils';
 import { ApprovedMerchantGuard } from '../guards/approved-merchant.guard.js';
 import { ApprovedDriverGuard } from '../guards/approved-driver.guard.js';
 import { AuthController } from '../auth.controller.js';
+import {
+  bootstrapAdminRbac,
+  assignAdminRole,
+  SUPER_ADMIN_ROLE_NAME,
+} from '../admin/admin-rbac.js';
+import { ADMIN_PERMISSIONS } from '../admin/admin-permissions.js';
+import { AdminService } from '../../admin/admin.service.js';
+
 
 describe('Phase 1G Identity & Authentication Integration Suite', () => {
+
   const config = loadAppConfig();
   let pool: pg.Pool;
   let db: DrizzleDb;
@@ -755,6 +763,88 @@ describe('Phase 1G Identity & Authentication Integration Suite', () => {
       assert.notEqual(refreshed.refresh_token, '', 'Mobile refresh token must NOT be empty');
       assert.equal(refreshed.audience, 'CUSTOMER_APP');
       assert.equal(Object.keys(cookies).length, 0, 'Must NOT set browser cookies for mobile refresh');
+    });
+  });
+
+  describe('8. Phase 2A1 Admin Core & RBAC Database Integration', () => {
+    let testAdminId: string;
+
+    it('17: Bootstraps RBAC idempotently and assigns SUPER_ADMIN role to admin in PostgreSQL', async () => {
+      // 1. Run bootstrap
+      const bootstrapRes = await bootstrapAdminRbac(pool);
+      assert.ok(bootstrapRes.superAdminRoleId);
+      assert.equal(bootstrapRes.permissionCodes.length, 4);
+
+      // 2. Run repeated bootstrap (idempotency verification)
+      const repeatRes = await bootstrapAdminRbac(pool);
+      assert.equal(repeatRes.superAdminRoleId, bootstrapRes.superAdminRoleId);
+
+      // 3. Create active admin account
+      testAdminId = generateUuidV7();
+      const pHash = await adminCryptoService.hashPassword('SuperAdminPass123!');
+      await pool.query(
+        `INSERT INTO admin_accounts (id, username, email, password_hash, status, mfa_enabled, created_at, updated_at)
+         VALUES ($1, 'e2e-superadmin', 'e2e-superadmin@toranggo.local', $2, 'ACTIVE', false, NOW(), NOW())
+         ON CONFLICT (username) DO NOTHING;`,
+        [testAdminId, pHash],
+      );
+
+      // 4. Assign SUPER_ADMIN role
+      await assignAdminRole(pool, testAdminId, SUPER_ADMIN_ROLE_NAME);
+
+      // 5. Query permissions via SessionService
+      const permSummary = await sessionService.getAdminPermissions(testAdminId);
+      assert.equal(permSummary.admin.username, 'e2e-superadmin');
+      assert.ok(permSummary.roles.includes('SUPER_ADMIN'));
+      assert.ok(permSummary.permissions.includes(ADMIN_PERMISSIONS.ACCESS));
+      assert.ok(permSummary.permissions.includes(ADMIN_PERMISSIONS.READ));
+      assert.ok(permSummary.permissions.includes(ADMIN_PERMISSIONS.WRITE));
+      assert.ok(permSummary.permissions.includes(ADMIN_PERMISSIONS.OPS));
+    });
+
+    it('18: AdminService.getOverview queries real database counts without mutations', async () => {
+      const adminService = new AdminService(pool);
+
+      // Initial query
+      const initialOverview = await adminService.getOverview();
+      assert.equal(typeof initialOverview.users.total, 'number');
+      assert.equal(typeof initialOverview.merchants.total, 'number');
+      assert.equal(typeof initialOverview.drivers.total, 'number');
+
+      // Insert controlled test records
+      const testUserId = generateUuidV7();
+      await pool.query(
+        `INSERT INTO users (id, phone, status, created_at, updated_at)
+         VALUES ($1, '+6289990001111', 'ACTIVE', NOW(), NOW());`,
+        [testUserId],
+      );
+
+      const testMerchantId = generateUuidV7();
+      await pool.query(
+        `INSERT INTO merchant_profiles (id, user_id, business_name, status, created_at, updated_at)
+         VALUES ($1, $2, 'Test Warung 2A1', 'PENDING', NOW(), NOW());`,
+        [testMerchantId, testUserId],
+      );
+
+      const testDriverId = generateUuidV7();
+      await pool.query(
+        `INSERT INTO driver_profiles (id, user_id, full_name, status, created_at, updated_at)
+         VALUES ($1, $2, 'Test Driver 2A1', 'APPROVED', NOW(), NOW());`,
+        [testDriverId, testUserId],
+      );
+
+      // Subsequent query must reflect real count increments
+      const updatedOverview = await adminService.getOverview();
+      assert.equal(updatedOverview.users.total, initialOverview.users.total + 1);
+      assert.equal(updatedOverview.merchants.total, initialOverview.merchants.total + 1);
+      assert.equal(updatedOverview.merchants.pending, initialOverview.merchants.pending + 1);
+      assert.equal(updatedOverview.drivers.total, initialOverview.drivers.total + 1);
+      assert.equal(updatedOverview.drivers.approved, initialOverview.drivers.approved + 1);
+
+      // Clean up test records
+      await pool.query('DELETE FROM driver_profiles WHERE id = $1', [testDriverId]);
+      await pool.query('DELETE FROM merchant_profiles WHERE id = $1', [testMerchantId]);
+      await pool.query('DELETE FROM users WHERE id = $1', [testUserId]);
     });
   });
 });
