@@ -12,7 +12,7 @@
         "build": "turbo run build",
         "lint": "turbo run lint",
         "typecheck": "turbo run typecheck",
-        "test": "node --test scripts/contract-drift-normalization.spec.mjs && turbo run test",
+        "test": "node --test scripts/contract-drift-normalization.spec.mjs scripts/env-config.spec.mjs && turbo run test",
         "contract:generate": "node scripts/contract-generate.mjs",
         "contract:check": "node scripts/contract-drift-check.mjs",
         "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\"",
