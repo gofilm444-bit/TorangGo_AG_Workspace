@@ -1,0 +1,27 @@
+{
+    "expo":  {
+                 "name":  "TorangGo Mitra",
+                 "slug":  "toranggo-merchant",
+                 "version":  "1.0.0",
+                 "orientation":  "portrait",
+                 "scheme":  "toranggo-merchant",
+                 "userInterfaceStyle":  "light",
+                 "ios":  {
+                             "supportsTablet":  true,
+                             "bundleIdentifier":  "com.toranggo.merchant.dev"
+                         },
+                 "android":  {
+                                 "adaptiveIcon":  {
+                                                      "backgroundColor":  "#ffffff"
+                                                  },
+                                 "package":  "com.toranggo.merchant.dev"
+                             },
+                 "plugins":  [
+                                 "expo-router"
+                             ],
+                 "platforms":  [
+                                   "ios",
+                                   "android"
+                               ]
+             }
+}

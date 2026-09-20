@@ -1,0 +1,32 @@
+{
+    "name": "toranggo-monorepo",
+    "version": "0.1.0",
+    "private": true,
+    "packageManager": "pnpm@11.22.0",
+    "engines": {
+        "node": "^24.0.0",
+        "pnpm": ">=9.0.0"
+    },
+    "scripts": {
+        "dev": "turbo run dev",
+        "build": "turbo run build",
+        "lint": "turbo run lint",
+        "typecheck": "turbo run typecheck",
+        "test": "node --test scripts/contract-drift-normalization.spec.mjs scripts/env-config.spec.mjs && turbo run test",
+        "contract:generate": "node scripts/contract-generate.mjs",
+        "contract:check": "node scripts/contract-drift-check.mjs",
+        "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\"",
+        "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\"",
+        "docker:up": "docker compose -f infrastructure/docker/docker-compose.yml up -d",
+        "docker:down": "docker compose -f infrastructure/docker/docker-compose.yml down"
+    },
+    "devDependencies": {
+        "@eslint/js": "^9.20.0",
+        "eslint": "^9.20.0",
+        "openapi-typescript": "^7.13.0",
+        "prettier": "^3.5.3",
+        "turbo": "^2.4.4",
+        "typescript": "~6.0.3",
+        "typescript-eslint": "^8.24.0"
+    }
+}

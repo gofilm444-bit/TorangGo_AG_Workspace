@@ -1,0 +1,27 @@
+{
+    "expo":  {
+                 "name":  "TorangGo",
+                 "slug":  "toranggo-customer",
+                 "version":  "1.0.0",
+                 "orientation":  "portrait",
+                 "scheme":  "toranggo-customer",
+                 "userInterfaceStyle":  "light",
+                 "ios":  {
+                             "supportsTablet":  true,
+                             "bundleIdentifier":  "com.toranggo.customer.dev"
+                         },
+                 "android":  {
+                                 "adaptiveIcon":  {
+                                                      "backgroundColor":  "#ffffff"
+                                                  },
+                                 "package":  "com.toranggo.customer.dev"
+                             },
+                 "plugins":  [
+                                 "expo-router"
+                             ],
+                 "platforms":  [
+                                   "ios",
+                                   "android"
+                               ]
+             }
+}

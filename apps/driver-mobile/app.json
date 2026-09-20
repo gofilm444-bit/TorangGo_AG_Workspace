@@ -1,0 +1,27 @@
+{
+    "expo":  {
+                 "name":  "TorangGo Driver",
+                 "slug":  "toranggo-driver",
+                 "version":  "1.0.0",
+                 "orientation":  "portrait",
+                 "scheme":  "toranggo-driver",
+                 "userInterfaceStyle":  "light",
+                 "ios":  {
+                             "supportsTablet":  true,
+                             "bundleIdentifier":  "com.toranggo.driver.dev"
+                         },
+                 "android":  {
+                                 "adaptiveIcon":  {
+                                                      "backgroundColor":  "#ffffff"
+                                                  },
+                                 "package":  "com.toranggo.driver.dev"
+                             },
+                 "plugins":  [
+                                 "expo-router"
+                             ],
+                 "platforms":  [
+                                   "ios",
+                                   "android"
+                               ]
+             }
+}
