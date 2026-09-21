@@ -15,6 +15,13 @@
       "when": 1788942096808,
       "tag": "0001_first_gateway",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789960519429,
+      "tag": "0002_careful_major_mapleleaf",
+      "breakpoints": true
     }
   ]
 }

@@ -194,6 +194,210 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/verifications/merchants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List merchant verification profiles with filtering and search */
+        get: operations["AdminVerificationController_listMerchants"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/verifications/merchants/{profileId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get merchant verification profile detail with audit history */
+        get: operations["AdminVerificationController_getMerchantDetail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/verifications/merchants/{profileId}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Approve a pending merchant profile */
+        post: operations["AdminVerificationController_approveMerchant"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/verifications/merchants/{profileId}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reject a pending merchant profile with reason */
+        post: operations["AdminVerificationController_rejectMerchant"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/verifications/merchants/{profileId}/suspend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Suspend an approved merchant profile with reason */
+        post: operations["AdminVerificationController_suspendMerchant"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/verifications/merchants/{profileId}/reactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reactivate a suspended merchant profile with reason */
+        post: operations["AdminVerificationController_reactivateMerchant"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/verifications/drivers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List driver verification profiles with filtering and search */
+        get: operations["AdminVerificationController_listDrivers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/verifications/drivers/{profileId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get driver verification profile detail with audit history */
+        get: operations["AdminVerificationController_getDriverDetail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/verifications/drivers/{profileId}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Approve a pending driver profile */
+        post: operations["AdminVerificationController_approveDriver"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/verifications/drivers/{profileId}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reject a pending driver profile with reason */
+        post: operations["AdminVerificationController_rejectDriver"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/verifications/drivers/{profileId}/suspend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Suspend an approved driver profile with reason */
+        post: operations["AdminVerificationController_suspendDriver"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/verifications/drivers/{profileId}/reactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reactivate a suspended driver profile with reason */
+        post: operations["AdminVerificationController_reactivateDriver"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -453,6 +657,163 @@ export interface components {
             merchants: components["schemas"]["AdminOverviewMerchantsDto"];
             drivers: components["schemas"]["AdminOverviewDriversDto"];
         };
+        MerchantVerificationItemDto: {
+            /** @example 018f6c5e-8b1b-7a6c-9c3f-4e5f6a7b8c9d */
+            profileId: string;
+            /** @example 018f6c5e-8b1b-7a6c-9c3f-4e5f6a7b8c9d */
+            userId: string;
+            /** @example +6281234567890 */
+            phone: string;
+            /** @example Warung Kopi Torang */
+            businessName?: string | null;
+            /** @example Warung Kopi Torang */
+            displayName?: string | null;
+            /**
+             * @example PENDING
+             * @enum {string}
+             */
+            status: "PENDING" | "APPROVED" | "REJECTED" | "SUSPENDED";
+            /** @example 2026-09-21T03:00:00.000Z */
+            createdAt: string;
+            /** @example 2026-09-21T03:00:00.000Z */
+            updatedAt: string;
+        };
+        MerchantVerificationListResponseDto: {
+            items: components["schemas"]["MerchantVerificationItemDto"][];
+            /** @example 1 */
+            page: number;
+            /** @example 20 */
+            limit: number;
+            /** @example 42 */
+            total: number;
+        };
+        VerificationAuditLogItemDto: {
+            /** @example 018f6c5e-8b1b-7a6c-9c3f-4e5f6a7b8c9d */
+            id: string;
+            /**
+             * @example MERCHANT
+             * @enum {string}
+             */
+            profileType: "MERCHANT" | "DRIVER";
+            /** @example 018f6c5e-8b1b-7a6c-9c3f-4e5f6a7b8c9d */
+            profileId: string;
+            /** @example 018f6c5e-8b1b-7a6c-9c3f-4e5f6a7b8c9d */
+            actorAdminId: string;
+            /**
+             * @description Admin username when available
+             * @example admin_ops
+             */
+            actorAdminUsername?: string | null;
+            /**
+             * @example APPROVE
+             * @enum {string}
+             */
+            action: "APPROVE" | "REJECT" | "SUSPEND" | "REACTIVATE";
+            /**
+             * @example PENDING
+             * @enum {string}
+             */
+            fromStatus: "PENDING" | "APPROVED" | "REJECTED" | "SUSPENDED";
+            /**
+             * @example APPROVED
+             * @enum {string}
+             */
+            toStatus: "PENDING" | "APPROVED" | "REJECTED" | "SUSPENDED";
+            /** @example Identitas valid */
+            reason?: string | null;
+            /** @example req-12345 */
+            requestId?: string | null;
+            /** @example 2026-09-21T03:00:00.000Z */
+            createdAt: string;
+        };
+        MerchantVerificationDetailResponseDto: {
+            /** @example 018f6c5e-8b1b-7a6c-9c3f-4e5f6a7b8c9d */
+            profileId: string;
+            /** @example 018f6c5e-8b1b-7a6c-9c3f-4e5f6a7b8c9d */
+            userId: string;
+            /** @example +6281234567890 */
+            phone: string;
+            /** @example Warung Kopi Torang */
+            businessName?: string | null;
+            /** @example Warung Kopi Torang */
+            displayName?: string | null;
+            /**
+             * @example PENDING
+             * @enum {string}
+             */
+            status: "PENDING" | "APPROVED" | "REJECTED" | "SUSPENDED";
+            /** @example 2026-09-21T03:00:00.000Z */
+            createdAt: string;
+            /** @example 2026-09-21T03:00:00.000Z */
+            updatedAt: string;
+            auditLogs: components["schemas"]["VerificationAuditLogItemDto"][];
+        };
+        ApproveVerificationActionDto: {
+            /**
+             * @description Optional administrative note or approval reason (max 1000 characters)
+             * @example Identitas dan profil valid
+             */
+            reason?: string | null;
+        };
+        ReasonRequiredVerificationActionDto: {
+            /**
+             * @description Mandatory administrative justification reason (min 3, max 1000 characters)
+             * @example Data profil belum sesuai ketentuan operasional
+             */
+            reason: string;
+        };
+        DriverVerificationItemDto: {
+            /** @example 018f6c5e-8b1b-7a6c-9c3f-4e5f6a7b8c9d */
+            profileId: string;
+            /** @example 018f6c5e-8b1b-7a6c-9c3f-4e5f6a7b8c9d */
+            userId: string;
+            /** @example +6281234567890 */
+            phone: string;
+            /** @example Budi Santoso */
+            fullName?: string | null;
+            /** @example Budi Santoso */
+            displayName?: string | null;
+            /**
+             * @example PENDING
+             * @enum {string}
+             */
+            status: "PENDING" | "APPROVED" | "REJECTED" | "SUSPENDED";
+            /** @example 2026-09-21T03:00:00.000Z */
+            createdAt: string;
+            /** @example 2026-09-21T03:00:00.000Z */
+            updatedAt: string;
+        };
+        DriverVerificationListResponseDto: {
+            items: components["schemas"]["DriverVerificationItemDto"][];
+            /** @example 1 */
+            page: number;
+            /** @example 20 */
+            limit: number;
+            /** @example 42 */
+            total: number;
+        };
+        DriverVerificationDetailResponseDto: {
+            /** @example 018f6c5e-8b1b-7a6c-9c3f-4e5f6a7b8c9d */
+            profileId: string;
+            /** @example 018f6c5e-8b1b-7a6c-9c3f-4e5f6a7b8c9d */
+            userId: string;
+            /** @example +6281234567890 */
+            phone: string;
+            /** @example Budi Santoso */
+            fullName?: string | null;
+            /** @example Budi Santoso */
+            displayName?: string | null;
+            /**
+             * @example PENDING
+             * @enum {string}
+             */
+            status: "PENDING" | "APPROVED" | "REJECTED" | "SUSPENDED";
+            /** @example 2026-09-21T03:00:00.000Z */
+            createdAt: string;
+            /** @example 2026-09-21T03:00:00.000Z */
+            updatedAt: string;
+            auditLogs: components["schemas"]["VerificationAuditLogItemDto"][];
+        };
     };
     responses: never;
     parameters: never;
@@ -697,6 +1058,664 @@ export interface operations {
             };
             /** @description Forbidden: Missing admin:access / admin:read permissions or non-ADMIN_WEB audience */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminVerificationController_listMerchants: {
+        parameters: {
+            query?: {
+                /** @description Filter by profile verification status */
+                status?: "PENDING" | "APPROVED" | "REJECTED" | "SUSPENDED";
+                /** @description Search query for phone number or display name */
+                q?: string;
+                /** @description Page number (1-based) */
+                page?: number;
+                /** @description Number of items per page */
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchantVerificationListResponseDto"];
+                };
+            };
+            /** @description Unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminVerificationController_getMerchantDetail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Merchant profile UUID */
+                profileId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchantVerificationDetailResponseDto"];
+                };
+            };
+            /** @description Unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Merchant profile not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminVerificationController_approveMerchant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Merchant profile UUID */
+                profileId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApproveVerificationActionDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchantVerificationDetailResponseDto"];
+                };
+            };
+            /** @description Invalid request body */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Merchant profile not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid transition or idempotency conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminVerificationController_rejectMerchant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Merchant profile UUID */
+                profileId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReasonRequiredVerificationActionDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchantVerificationDetailResponseDto"];
+                };
+            };
+            /** @description Invalid request or reason missing */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Merchant profile not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid transition or idempotency conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminVerificationController_suspendMerchant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Merchant profile UUID */
+                profileId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReasonRequiredVerificationActionDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchantVerificationDetailResponseDto"];
+                };
+            };
+            /** @description Invalid request or reason missing */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Merchant profile not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid transition or idempotency conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminVerificationController_reactivateMerchant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Merchant profile UUID */
+                profileId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReasonRequiredVerificationActionDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchantVerificationDetailResponseDto"];
+                };
+            };
+            /** @description Invalid request or reason missing */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Merchant profile not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid transition or idempotency conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminVerificationController_listDrivers: {
+        parameters: {
+            query?: {
+                /** @description Filter by profile verification status */
+                status?: "PENDING" | "APPROVED" | "REJECTED" | "SUSPENDED";
+                /** @description Search query for phone number or display name */
+                q?: string;
+                /** @description Page number (1-based) */
+                page?: number;
+                /** @description Number of items per page */
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DriverVerificationListResponseDto"];
+                };
+            };
+            /** @description Unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminVerificationController_getDriverDetail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Driver profile UUID */
+                profileId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DriverVerificationDetailResponseDto"];
+                };
+            };
+            /** @description Unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Driver profile not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminVerificationController_approveDriver: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Driver profile UUID */
+                profileId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApproveVerificationActionDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DriverVerificationDetailResponseDto"];
+                };
+            };
+            /** @description Invalid request body */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Driver profile not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid transition or idempotency conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminVerificationController_rejectDriver: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Driver profile UUID */
+                profileId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReasonRequiredVerificationActionDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DriverVerificationDetailResponseDto"];
+                };
+            };
+            /** @description Invalid request or reason missing */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Driver profile not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid transition or idempotency conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminVerificationController_suspendDriver: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Driver profile UUID */
+                profileId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReasonRequiredVerificationActionDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DriverVerificationDetailResponseDto"];
+                };
+            };
+            /** @description Invalid request or reason missing */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Driver profile not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid transition or idempotency conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminVerificationController_reactivateDriver: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Driver profile UUID */
+                profileId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReasonRequiredVerificationActionDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DriverVerificationDetailResponseDto"];
+                };
+            };
+            /** @description Invalid request or reason missing */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Driver profile not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid transition or idempotency conflict */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

@@ -6,6 +6,11 @@ import type {
   RequestOptions,
   ApiResponse,
   AdminOverviewResponseDto,
+  MerchantVerificationListResponseDto,
+  MerchantVerificationDetailResponseDto,
+  DriverVerificationListResponseDto,
+  DriverVerificationDetailResponseDto,
+  VerificationQueryOptions,
 } from './types.js';
 
 
@@ -278,6 +283,211 @@ export class ApiClient {
     const res = await this.request<AdminOverviewResponseDto>(
       '/api/v1/admin/overview',
       { method: 'GET' },
+      options,
+    );
+    return res.data;
+  }
+
+  // ===========================================================================
+  // Phase 2A2 — Admin Verification Workflow Methods
+  // ===========================================================================
+
+  private buildVerificationQueryString(query?: VerificationQueryOptions): string {
+    if (!query) return '';
+    const params = new URLSearchParams();
+    if (query.status) params.set('status', query.status);
+    if (query.q) params.set('q', query.q);
+    if (query.page) params.set('page', String(query.page));
+    if (query.limit) params.set('limit', String(query.limit));
+    const qs = params.toString();
+    return qs ? `?${qs}` : '';
+  }
+
+  /**
+   * List merchant verification profiles with optional filters, search, and pagination.
+   */
+  async listMerchantVerifications(
+    query?: VerificationQueryOptions,
+    options?: RequestOptions,
+  ): Promise<MerchantVerificationListResponseDto> {
+    const qs = this.buildVerificationQueryString(query);
+    const res = await this.request<MerchantVerificationListResponseDto>(
+      `/api/v1/admin/verifications/merchants${qs}`,
+      { method: 'GET' },
+      options,
+    );
+    return res.data;
+  }
+
+  /**
+   * Get merchant verification profile detail with full audit history.
+   */
+  async getMerchantVerificationDetail(
+    profileId: string,
+    options?: RequestOptions,
+  ): Promise<MerchantVerificationDetailResponseDto> {
+    const res = await this.request<MerchantVerificationDetailResponseDto>(
+      `/api/v1/admin/verifications/merchants/${profileId}`,
+      { method: 'GET' },
+      options,
+    );
+    return res.data;
+  }
+
+  /**
+   * Approve a pending merchant profile.
+   */
+  async approveMerchant(
+    profileId: string,
+    body?: { reason?: string },
+    options?: RequestOptions,
+  ): Promise<MerchantVerificationDetailResponseDto> {
+    const res = await this.request<MerchantVerificationDetailResponseDto>(
+      `/api/v1/admin/verifications/merchants/${profileId}/approve`,
+      { method: 'POST', body: JSON.stringify(body ?? {}) },
+      options,
+    );
+    return res.data;
+  }
+
+  /**
+   * Reject a pending merchant profile with reason.
+   */
+  async rejectMerchant(
+    profileId: string,
+    body: { reason: string },
+    options?: RequestOptions,
+  ): Promise<MerchantVerificationDetailResponseDto> {
+    const res = await this.request<MerchantVerificationDetailResponseDto>(
+      `/api/v1/admin/verifications/merchants/${profileId}/reject`,
+      { method: 'POST', body: JSON.stringify(body) },
+      options,
+    );
+    return res.data;
+  }
+
+  /**
+   * Suspend an approved merchant profile with reason.
+   */
+  async suspendMerchant(
+    profileId: string,
+    body: { reason: string },
+    options?: RequestOptions,
+  ): Promise<MerchantVerificationDetailResponseDto> {
+    const res = await this.request<MerchantVerificationDetailResponseDto>(
+      `/api/v1/admin/verifications/merchants/${profileId}/suspend`,
+      { method: 'POST', body: JSON.stringify(body) },
+      options,
+    );
+    return res.data;
+  }
+
+  /**
+   * Reactivate a suspended merchant profile with reason.
+   */
+  async reactivateMerchant(
+    profileId: string,
+    body: { reason: string },
+    options?: RequestOptions,
+  ): Promise<MerchantVerificationDetailResponseDto> {
+    const res = await this.request<MerchantVerificationDetailResponseDto>(
+      `/api/v1/admin/verifications/merchants/${profileId}/reactivate`,
+      { method: 'POST', body: JSON.stringify(body) },
+      options,
+    );
+    return res.data;
+  }
+
+  /**
+   * List driver verification profiles with optional filters, search, and pagination.
+   */
+  async listDriverVerifications(
+    query?: VerificationQueryOptions,
+    options?: RequestOptions,
+  ): Promise<DriverVerificationListResponseDto> {
+    const qs = this.buildVerificationQueryString(query);
+    const res = await this.request<DriverVerificationListResponseDto>(
+      `/api/v1/admin/verifications/drivers${qs}`,
+      { method: 'GET' },
+      options,
+    );
+    return res.data;
+  }
+
+  /**
+   * Get driver verification profile detail with full audit history.
+   */
+  async getDriverVerificationDetail(
+    profileId: string,
+    options?: RequestOptions,
+  ): Promise<DriverVerificationDetailResponseDto> {
+    const res = await this.request<DriverVerificationDetailResponseDto>(
+      `/api/v1/admin/verifications/drivers/${profileId}`,
+      { method: 'GET' },
+      options,
+    );
+    return res.data;
+  }
+
+  /**
+   * Approve a pending driver profile.
+   */
+  async approveDriver(
+    profileId: string,
+    body?: { reason?: string },
+    options?: RequestOptions,
+  ): Promise<DriverVerificationDetailResponseDto> {
+    const res = await this.request<DriverVerificationDetailResponseDto>(
+      `/api/v1/admin/verifications/drivers/${profileId}/approve`,
+      { method: 'POST', body: JSON.stringify(body ?? {}) },
+      options,
+    );
+    return res.data;
+  }
+
+  /**
+   * Reject a pending driver profile with reason.
+   */
+  async rejectDriver(
+    profileId: string,
+    body: { reason: string },
+    options?: RequestOptions,
+  ): Promise<DriverVerificationDetailResponseDto> {
+    const res = await this.request<DriverVerificationDetailResponseDto>(
+      `/api/v1/admin/verifications/drivers/${profileId}/reject`,
+      { method: 'POST', body: JSON.stringify(body) },
+      options,
+    );
+    return res.data;
+  }
+
+  /**
+   * Suspend an approved driver profile with reason.
+   */
+  async suspendDriver(
+    profileId: string,
+    body: { reason: string },
+    options?: RequestOptions,
+  ): Promise<DriverVerificationDetailResponseDto> {
+    const res = await this.request<DriverVerificationDetailResponseDto>(
+      `/api/v1/admin/verifications/drivers/${profileId}/suspend`,
+      { method: 'POST', body: JSON.stringify(body) },
+      options,
+    );
+    return res.data;
+  }
+
+  /**
+   * Reactivate a suspended driver profile with reason.
+   */
+  async reactivateDriver(
+    profileId: string,
+    body: { reason: string },
+    options?: RequestOptions,
+  ): Promise<DriverVerificationDetailResponseDto> {
+    const res = await this.request<DriverVerificationDetailResponseDto>(
+      `/api/v1/admin/verifications/drivers/${profileId}/reactivate`,
+      { method: 'POST', body: JSON.stringify(body) },
       options,
     );
     return res.data;

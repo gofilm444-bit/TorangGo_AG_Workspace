@@ -312,6 +312,756 @@
           "Admin"
         ]
       }
+    },
+    "/api/v1/admin/verifications/merchants": {
+      "get": {
+        "operationId": "AdminVerificationController_listMerchants",
+        "parameters": [
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "Filter by profile verification status",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDING",
+                "APPROVED",
+                "REJECTED",
+                "SUSPENDED"
+              ]
+            }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Search query for phone number or display name",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number (1-based)",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of items per page",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MerchantVerificationListResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List merchant verification profiles with filtering and search",
+        "tags": [
+          "Admin Verification"
+        ]
+      }
+    },
+    "/api/v1/admin/verifications/merchants/{profileId}": {
+      "get": {
+        "operationId": "AdminVerificationController_getMerchantDetail",
+        "parameters": [
+          {
+            "name": "profileId",
+            "required": true,
+            "in": "path",
+            "description": "Merchant profile UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MerchantVerificationDetailResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Merchant profile not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get merchant verification profile detail with audit history",
+        "tags": [
+          "Admin Verification"
+        ]
+      }
+    },
+    "/api/v1/admin/verifications/merchants/{profileId}/approve": {
+      "post": {
+        "operationId": "AdminVerificationController_approveMerchant",
+        "parameters": [
+          {
+            "name": "profileId",
+            "required": true,
+            "in": "path",
+            "description": "Merchant profile UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApproveVerificationActionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MerchantVerificationDetailResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Merchant profile not found"
+          },
+          "409": {
+            "description": "Invalid transition or idempotency conflict"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Approve a pending merchant profile",
+        "tags": [
+          "Admin Verification"
+        ]
+      }
+    },
+    "/api/v1/admin/verifications/merchants/{profileId}/reject": {
+      "post": {
+        "operationId": "AdminVerificationController_rejectMerchant",
+        "parameters": [
+          {
+            "name": "profileId",
+            "required": true,
+            "in": "path",
+            "description": "Merchant profile UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReasonRequiredVerificationActionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MerchantVerificationDetailResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or reason missing"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Merchant profile not found"
+          },
+          "409": {
+            "description": "Invalid transition or idempotency conflict"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Reject a pending merchant profile with reason",
+        "tags": [
+          "Admin Verification"
+        ]
+      }
+    },
+    "/api/v1/admin/verifications/merchants/{profileId}/suspend": {
+      "post": {
+        "operationId": "AdminVerificationController_suspendMerchant",
+        "parameters": [
+          {
+            "name": "profileId",
+            "required": true,
+            "in": "path",
+            "description": "Merchant profile UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReasonRequiredVerificationActionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MerchantVerificationDetailResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or reason missing"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Merchant profile not found"
+          },
+          "409": {
+            "description": "Invalid transition or idempotency conflict"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Suspend an approved merchant profile with reason",
+        "tags": [
+          "Admin Verification"
+        ]
+      }
+    },
+    "/api/v1/admin/verifications/merchants/{profileId}/reactivate": {
+      "post": {
+        "operationId": "AdminVerificationController_reactivateMerchant",
+        "parameters": [
+          {
+            "name": "profileId",
+            "required": true,
+            "in": "path",
+            "description": "Merchant profile UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReasonRequiredVerificationActionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MerchantVerificationDetailResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or reason missing"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Merchant profile not found"
+          },
+          "409": {
+            "description": "Invalid transition or idempotency conflict"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Reactivate a suspended merchant profile with reason",
+        "tags": [
+          "Admin Verification"
+        ]
+      }
+    },
+    "/api/v1/admin/verifications/drivers": {
+      "get": {
+        "operationId": "AdminVerificationController_listDrivers",
+        "parameters": [
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "Filter by profile verification status",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDING",
+                "APPROVED",
+                "REJECTED",
+                "SUSPENDED"
+              ]
+            }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Search query for phone number or display name",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number (1-based)",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of items per page",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DriverVerificationListResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List driver verification profiles with filtering and search",
+        "tags": [
+          "Admin Verification"
+        ]
+      }
+    },
+    "/api/v1/admin/verifications/drivers/{profileId}": {
+      "get": {
+        "operationId": "AdminVerificationController_getDriverDetail",
+        "parameters": [
+          {
+            "name": "profileId",
+            "required": true,
+            "in": "path",
+            "description": "Driver profile UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DriverVerificationDetailResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Driver profile not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get driver verification profile detail with audit history",
+        "tags": [
+          "Admin Verification"
+        ]
+      }
+    },
+    "/api/v1/admin/verifications/drivers/{profileId}/approve": {
+      "post": {
+        "operationId": "AdminVerificationController_approveDriver",
+        "parameters": [
+          {
+            "name": "profileId",
+            "required": true,
+            "in": "path",
+            "description": "Driver profile UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApproveVerificationActionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DriverVerificationDetailResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Driver profile not found"
+          },
+          "409": {
+            "description": "Invalid transition or idempotency conflict"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Approve a pending driver profile",
+        "tags": [
+          "Admin Verification"
+        ]
+      }
+    },
+    "/api/v1/admin/verifications/drivers/{profileId}/reject": {
+      "post": {
+        "operationId": "AdminVerificationController_rejectDriver",
+        "parameters": [
+          {
+            "name": "profileId",
+            "required": true,
+            "in": "path",
+            "description": "Driver profile UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReasonRequiredVerificationActionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DriverVerificationDetailResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or reason missing"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Driver profile not found"
+          },
+          "409": {
+            "description": "Invalid transition or idempotency conflict"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Reject a pending driver profile with reason",
+        "tags": [
+          "Admin Verification"
+        ]
+      }
+    },
+    "/api/v1/admin/verifications/drivers/{profileId}/suspend": {
+      "post": {
+        "operationId": "AdminVerificationController_suspendDriver",
+        "parameters": [
+          {
+            "name": "profileId",
+            "required": true,
+            "in": "path",
+            "description": "Driver profile UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReasonRequiredVerificationActionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DriverVerificationDetailResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or reason missing"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Driver profile not found"
+          },
+          "409": {
+            "description": "Invalid transition or idempotency conflict"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Suspend an approved driver profile with reason",
+        "tags": [
+          "Admin Verification"
+        ]
+      }
+    },
+    "/api/v1/admin/verifications/drivers/{profileId}/reactivate": {
+      "post": {
+        "operationId": "AdminVerificationController_reactivateDriver",
+        "parameters": [
+          {
+            "name": "profileId",
+            "required": true,
+            "in": "path",
+            "description": "Driver profile UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReasonRequiredVerificationActionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DriverVerificationDetailResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or reason missing"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Driver profile not found"
+          },
+          "409": {
+            "description": "Invalid transition or idempotency conflict"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Reactivate a suspended driver profile with reason",
+        "tags": [
+          "Admin Verification"
+        ]
+      }
     }
   },
   "info": {
@@ -846,6 +1596,402 @@
           "users",
           "merchants",
           "drivers"
+        ]
+      },
+      "MerchantVerificationItemDto": {
+        "type": "object",
+        "properties": {
+          "profileId": {
+            "type": "string",
+            "example": "018f6c5e-8b1b-7a6c-9c3f-4e5f6a7b8c9d"
+          },
+          "userId": {
+            "type": "string",
+            "example": "018f6c5e-8b1b-7a6c-9c3f-4e5f6a7b8c9d"
+          },
+          "phone": {
+            "type": "string",
+            "example": "+6281234567890"
+          },
+          "businessName": {
+            "type": "string",
+            "example": "Warung Kopi Torang",
+            "nullable": true
+          },
+          "displayName": {
+            "type": "string",
+            "example": "Warung Kopi Torang",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "APPROVED",
+              "REJECTED",
+              "SUSPENDED"
+            ],
+            "example": "PENDING"
+          },
+          "createdAt": {
+            "type": "string",
+            "example": "2026-09-21T03:00:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "example": "2026-09-21T03:00:00.000Z"
+          }
+        },
+        "required": [
+          "profileId",
+          "userId",
+          "phone",
+          "status",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "MerchantVerificationListResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MerchantVerificationItemDto"
+            }
+          },
+          "page": {
+            "type": "number",
+            "example": 1
+          },
+          "limit": {
+            "type": "number",
+            "example": 20
+          },
+          "total": {
+            "type": "number",
+            "example": 42
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "limit",
+          "total"
+        ]
+      },
+      "VerificationAuditLogItemDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "018f6c5e-8b1b-7a6c-9c3f-4e5f6a7b8c9d"
+          },
+          "profileType": {
+            "type": "string",
+            "enum": [
+              "MERCHANT",
+              "DRIVER"
+            ],
+            "example": "MERCHANT"
+          },
+          "profileId": {
+            "type": "string",
+            "example": "018f6c5e-8b1b-7a6c-9c3f-4e5f6a7b8c9d"
+          },
+          "actorAdminId": {
+            "type": "string",
+            "example": "018f6c5e-8b1b-7a6c-9c3f-4e5f6a7b8c9d"
+          },
+          "actorAdminUsername": {
+            "type": "string",
+            "example": "admin_ops",
+            "description": "Admin username when available",
+            "nullable": true
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "APPROVE",
+              "REJECT",
+              "SUSPEND",
+              "REACTIVATE"
+            ],
+            "example": "APPROVE"
+          },
+          "fromStatus": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "APPROVED",
+              "REJECTED",
+              "SUSPENDED"
+            ],
+            "example": "PENDING"
+          },
+          "toStatus": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "APPROVED",
+              "REJECTED",
+              "SUSPENDED"
+            ],
+            "example": "APPROVED"
+          },
+          "reason": {
+            "type": "string",
+            "example": "Identitas valid",
+            "nullable": true
+          },
+          "requestId": {
+            "type": "string",
+            "example": "req-12345",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "example": "2026-09-21T03:00:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "profileType",
+          "profileId",
+          "actorAdminId",
+          "action",
+          "fromStatus",
+          "toStatus",
+          "createdAt"
+        ]
+      },
+      "MerchantVerificationDetailResponseDto": {
+        "type": "object",
+        "properties": {
+          "profileId": {
+            "type": "string",
+            "example": "018f6c5e-8b1b-7a6c-9c3f-4e5f6a7b8c9d"
+          },
+          "userId": {
+            "type": "string",
+            "example": "018f6c5e-8b1b-7a6c-9c3f-4e5f6a7b8c9d"
+          },
+          "phone": {
+            "type": "string",
+            "example": "+6281234567890"
+          },
+          "businessName": {
+            "type": "string",
+            "example": "Warung Kopi Torang",
+            "nullable": true
+          },
+          "displayName": {
+            "type": "string",
+            "example": "Warung Kopi Torang",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "APPROVED",
+              "REJECTED",
+              "SUSPENDED"
+            ],
+            "example": "PENDING"
+          },
+          "createdAt": {
+            "type": "string",
+            "example": "2026-09-21T03:00:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "example": "2026-09-21T03:00:00.000Z"
+          },
+          "auditLogs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VerificationAuditLogItemDto"
+            }
+          }
+        },
+        "required": [
+          "profileId",
+          "userId",
+          "phone",
+          "status",
+          "createdAt",
+          "updatedAt",
+          "auditLogs"
+        ]
+      },
+      "ApproveVerificationActionDto": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "description": "Optional administrative note or approval reason (max 1000 characters)",
+            "maxLength": 1000,
+            "example": "Identitas dan profil valid",
+            "nullable": true
+          }
+        }
+      },
+      "ReasonRequiredVerificationActionDto": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "description": "Mandatory administrative justification reason (min 3, max 1000 characters)",
+            "minLength": 3,
+            "maxLength": 1000,
+            "example": "Data profil belum sesuai ketentuan operasional"
+          }
+        },
+        "required": [
+          "reason"
+        ]
+      },
+      "DriverVerificationItemDto": {
+        "type": "object",
+        "properties": {
+          "profileId": {
+            "type": "string",
+            "example": "018f6c5e-8b1b-7a6c-9c3f-4e5f6a7b8c9d"
+          },
+          "userId": {
+            "type": "string",
+            "example": "018f6c5e-8b1b-7a6c-9c3f-4e5f6a7b8c9d"
+          },
+          "phone": {
+            "type": "string",
+            "example": "+6281234567890"
+          },
+          "fullName": {
+            "type": "string",
+            "example": "Budi Santoso",
+            "nullable": true
+          },
+          "displayName": {
+            "type": "string",
+            "example": "Budi Santoso",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "APPROVED",
+              "REJECTED",
+              "SUSPENDED"
+            ],
+            "example": "PENDING"
+          },
+          "createdAt": {
+            "type": "string",
+            "example": "2026-09-21T03:00:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "example": "2026-09-21T03:00:00.000Z"
+          }
+        },
+        "required": [
+          "profileId",
+          "userId",
+          "phone",
+          "status",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "DriverVerificationListResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DriverVerificationItemDto"
+            }
+          },
+          "page": {
+            "type": "number",
+            "example": 1
+          },
+          "limit": {
+            "type": "number",
+            "example": 20
+          },
+          "total": {
+            "type": "number",
+            "example": 42
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "limit",
+          "total"
+        ]
+      },
+      "DriverVerificationDetailResponseDto": {
+        "type": "object",
+        "properties": {
+          "profileId": {
+            "type": "string",
+            "example": "018f6c5e-8b1b-7a6c-9c3f-4e5f6a7b8c9d"
+          },
+          "userId": {
+            "type": "string",
+            "example": "018f6c5e-8b1b-7a6c-9c3f-4e5f6a7b8c9d"
+          },
+          "phone": {
+            "type": "string",
+            "example": "+6281234567890"
+          },
+          "fullName": {
+            "type": "string",
+            "example": "Budi Santoso",
+            "nullable": true
+          },
+          "displayName": {
+            "type": "string",
+            "example": "Budi Santoso",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "APPROVED",
+              "REJECTED",
+              "SUSPENDED"
+            ],
+            "example": "PENDING"
+          },
+          "createdAt": {
+            "type": "string",
+            "example": "2026-09-21T03:00:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "example": "2026-09-21T03:00:00.000Z"
+          },
+          "auditLogs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VerificationAuditLogItemDto"
+            }
+          }
+        },
+        "required": [
+          "profileId",
+          "userId",
+          "phone",
+          "status",
+          "createdAt",
+          "updatedAt",
+          "auditLogs"
         ]
       }
     }

@@ -22,7 +22,7 @@ export const ADMIN_NAV_ITEMS: readonly NavItem[] = [
     id: 'verifikasi',
     label: 'Verifikasi',
     href: '/verifikasi',
-    description: 'Verifikasi merchant, driver, dan dokumen KYC',
+    description: 'Verifikasi profil merchant dan driver',
     iconName: 'verifikasi',
   },
   {

@@ -86,6 +86,7 @@ export const merchantProfiles = pgTable(
   (table) => [
     unique('uq_merchant_profiles_user_id').on(table.userId),
     index('idx_merchant_profiles_user_status').on(table.userId, table.status),
+    index('idx_merchant_profiles_status_created').on(table.status, table.createdAt),
   ],
 );
 
@@ -115,11 +116,47 @@ export const driverProfiles = pgTable(
   (table) => [
     unique('uq_driver_profiles_user_id').on(table.userId),
     index('idx_driver_profiles_user_status').on(table.userId, table.status),
+    index('idx_driver_profiles_status_created').on(table.status, table.createdAt),
   ],
 );
 
 export type DriverProfileEntity = typeof driverProfiles.$inferSelect;
 export type NewDriverProfileEntity = typeof driverProfiles.$inferInsert;
+
+/**
+ * Profile Verification Audit Logs table.
+ * Append-only audit trail for administrative status mutations.
+ */
+export const profileVerificationAuditLogs = pgTable(
+  'profile_verification_audit_logs',
+  {
+    id: uuid('id').primaryKey(),
+    profileType: varchar('profile_type', { length: 32 }).notNull(),
+    profileId: uuid('profile_id').notNull(),
+    actorAdminId: uuid('actor_admin_id')
+      .notNull()
+      .references(() => adminAccounts.id, { onDelete: 'restrict' }),
+    action: varchar('action', { length: 32 }).notNull(),
+    fromStatus: varchar('from_status', { length: 32 }).notNull(),
+    toStatus: varchar('to_status', { length: 32 }).notNull(),
+    reason: text('reason'),
+    requestId: varchar('request_id', { length: 128 }),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index('idx_profile_verification_audit_target').on(
+      table.profileType,
+      table.profileId,
+      table.createdAt,
+    ),
+    index('idx_profile_verification_audit_actor').on(table.actorAdminId),
+  ],
+);
+
+export type ProfileVerificationAuditLogEntity = typeof profileVerificationAuditLogs.$inferSelect;
+export type NewProfileVerificationAuditLogEntity = typeof profileVerificationAuditLogs.$inferInsert;
 
 /**
  * Admin Accounts table.

@@ -83,3 +83,20 @@ export type AdminOverviewUsersDto = components['schemas']['AdminOverviewUsersDto
 export type AdminOverviewMerchantsDto = components['schemas']['AdminOverviewMerchantsDto'];
 export type AdminOverviewDriversDto = components['schemas']['AdminOverviewDriversDto'];
 export type AdminOverviewResponseDto = components['schemas']['AdminOverviewResponseDto'];
+
+export type MerchantVerificationItemDto = components['schemas']['MerchantVerificationItemDto'];
+export type MerchantVerificationListResponseDto = components['schemas']['MerchantVerificationListResponseDto'];
+export type VerificationAuditLogItemDto = components['schemas']['VerificationAuditLogItemDto'];
+export type MerchantVerificationDetailResponseDto = components['schemas']['MerchantVerificationDetailResponseDto'];
+export type ApproveVerificationActionDto = components['schemas']['ApproveVerificationActionDto'];
+export type ReasonRequiredVerificationActionDto = components['schemas']['ReasonRequiredVerificationActionDto'];
+export type DriverVerificationItemDto = components['schemas']['DriverVerificationItemDto'];
+export type DriverVerificationListResponseDto = components['schemas']['DriverVerificationListResponseDto'];
+export type DriverVerificationDetailResponseDto = components['schemas']['DriverVerificationDetailResponseDto'];
+
+export interface VerificationQueryOptions {
+  status?: 'PENDING' | 'APPROVED' | 'REJECTED' | 'SUSPENDED';
+  q?: string;
+  page?: number;
+  limit?: number;
+}
