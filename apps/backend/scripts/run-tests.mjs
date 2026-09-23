@@ -65,7 +65,7 @@ try {
     TEST_REDIS_URL: infra.testRedisUrl,
   };
 
-  const result = spawnSync(process.execPath, ['--test', ...compiledFiles], {
+  const result = spawnSync(process.execPath, ['--test', '--test-concurrency=1', ...compiledFiles], {
     stdio: 'inherit',
     env: childEnv,
   });

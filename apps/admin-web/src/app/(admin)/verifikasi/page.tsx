@@ -11,13 +11,15 @@ import {
   Button,
 } from '../../../components/ui';
 import { adminApiClient } from '../../../lib/api';
+import { adminConfig } from '../../../lib/config';
 import { useAdminAuth } from '../../../lib/auth-context';
-import type {
-  MerchantVerificationItemDto,
-  MerchantVerificationDetailResponseDto,
-  DriverVerificationItemDto,
-  DriverVerificationDetailResponseDto,
-  VerificationAuditLogItemDto,
+import {
+  ApiClientError,
+  type MerchantVerificationItemDto,
+  type MerchantVerificationDetailResponseDto,
+  type DriverVerificationItemDto,
+  type DriverVerificationDetailResponseDto,
+  type VerificationAuditLogItemDto,
 } from '@platform/api-client';
 
 type TabType = 'MERCHANT' | 'DRIVER';
@@ -67,6 +69,14 @@ export default function VerifikasiPage() {
   // Action modal & Feedback state
   const [actionModal, setActionModal] = useState<ActionModalState | null>(null);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  // Phase 2B: Reveal NIK & KTP Document Preview State
+  const [revealedNik, setRevealedNik] = useState<Record<string, string>>({});
+  const [loadingNik, setLoadingNik] = useState(false);
+  const [ktpModalOpen, setKtpModalOpen] = useState(false);
+  const [ktpImageSrc, setKtpImageSrc] = useState<string | null>(null);
+  const [loadingKtp, setLoadingKtp] = useState(false);
+  const [ktpError, setKtpError] = useState<string | null>(null);
 
   // Fetch list data
   const fetchList = useCallback(async () => {
@@ -136,6 +146,8 @@ export default function VerifikasiPage() {
     setMerchantDetail(null);
     setDriverDetail(null);
     setFeedback(null);
+    setRevealedNik({});
+    handleCloseKtpModal();
   };
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -148,6 +160,51 @@ export default function VerifikasiPage() {
     setSearchQuery('');
     setAppliedSearch('');
     setCurrentPage(1);
+  };
+
+  const handleRevealNik = async (profileId: string) => {
+    setLoadingNik(true);
+    try {
+      const res = await adminApiClient.revealMerchantNik(profileId);
+      setRevealedNik((prev) => ({ ...prev, [profileId]: res.nik }));
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Gagal membuka NIK';
+      setFeedback({ type: 'error', message: msg });
+    } finally {
+      setLoadingNik(false);
+    }
+  };
+
+  const handleOpenKtpModal = async (profileId: string) => {
+    setKtpModalOpen(true);
+    setLoadingKtp(true);
+    setKtpError(null);
+    setKtpImageSrc(null);
+    try {
+      const baseUrl = (adminConfig.apiBaseUrl || '').replace(/\/+$/, '');
+      const res = await fetch(`${baseUrl}/api/v1/admin/verifications/merchants/${profileId}/documents/ktp`, {
+        credentials: 'include',
+      });
+      if (!res.ok) {
+        throw new Error(`Gagal memuat berkas identitas KTP (HTTP ${res.status})`);
+      }
+      const blob = await res.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      setKtpImageSrc(objectUrl);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Gagal memuat berkas identitas KTP';
+      setKtpError(msg);
+    } finally {
+      setLoadingKtp(false);
+    }
+  };
+
+  const handleCloseKtpModal = () => {
+    if (ktpImageSrc) {
+      URL.revokeObjectURL(ktpImageSrc);
+    }
+    setKtpImageSrc(null);
+    setKtpModalOpen(false);
   };
 
   const openActionModal = (
@@ -210,10 +267,21 @@ export default function VerifikasiPage() {
     try {
       if (activeTab === 'MERCHANT') {
         let updated: MerchantVerificationDetailResponseDto;
+        const expectedSubmissionId = merchantDetail?.currentSubmissionId || undefined;
         if (action === 'APPROVE') {
           updated = await adminApiClient.approveMerchant(profileId, { reason: trimmedReason || undefined }, { idempotencyKey });
+          updated = await adminApiClient.approveMerchant(
+            profileId,
+            { reason: trimmedReason || undefined, expectedSubmissionId },
+            { idempotencyKey },
+          );
         } else if (action === 'REJECT') {
           updated = await adminApiClient.rejectMerchant(profileId, { reason: trimmedReason }, { idempotencyKey });
+          updated = await adminApiClient.rejectMerchant(
+            profileId,
+            { reason: trimmedReason, expectedSubmissionId },
+            { idempotencyKey },
+          );
         } else if (action === 'SUSPEND') {
           updated = await adminApiClient.suspendMerchant(profileId, { reason: trimmedReason }, { idempotencyKey });
         } else {
@@ -243,6 +311,24 @@ export default function VerifikasiPage() {
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Gagal memproses tindakan verifikasi';
       setActionModal((prev) => prev ? { ...prev, submitting: false, error: msg } : null);
+      const isConflict =
+        (err instanceof ApiClientError && err.status === 409) ||
+        (err instanceof Error &&
+          (err.message.includes('409') ||
+            err.message.includes('Submission ID tidak sesuai') ||
+            err.message.includes('Pengajuan telah berubah')));
+
+      if (isConflict) {
+        const conflictMsg =
+          'Pengajuan telah berubah. Muat ulang data terbaru sebelum melakukan verifikasi.';
+        setActionModal((prev) => (prev ? { ...prev, submitting: false, error: conflictMsg } : null));
+        setFeedback({ type: 'error', message: conflictMsg });
+        fetchDetail(profileId);
+        fetchList();
+      } else {
+        const msg = err instanceof Error ? err.message : 'Gagal memproses tindakan verifikasi';
+        setActionModal((prev) => (prev ? { ...prev, submitting: false, error: msg } : null));
+      }
     }
   };
 
@@ -649,6 +735,166 @@ export default function VerifikasiPage() {
                   </div>
                 </div>
 
+                {/* Phase 2B: Merchant Onboarding Submission Snapshot */}
+                {activeTab === 'MERCHANT' && (
+                  <div style={{ marginBottom: '24px' }}>
+                    {merchantDetail?.currentSubmission ? (
+                      <div
+                        style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '16px',
+                          border: '1px solid var(--color-border)',
+                          borderRadius: 'var(--radius-md)',
+                          padding: '16px',
+                          backgroundColor: 'var(--color-bg-canvas)',
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--color-border)', paddingBottom: '12px' }}>
+                          <div>
+                            <span style={{ fontWeight: 600, fontSize: '0.9375rem' }}>
+                              Pengajuan Mitra #{merchantDetail.currentSubmission.revisionNumber}
+                            </span>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
+                              Diajukan: {new Date(merchantDetail.currentSubmission.submittedAt).toLocaleString('id-ID')}
+                            </div>
+                          </div>
+                          <div>{renderBadge(merchantDetail.currentSubmission.status)}</div>
+                        </div>
+
+                        {/* Identitas Pemilik */}
+                        <div>
+                          <div style={{ fontWeight: 600, fontSize: '0.8125rem', color: 'var(--color-text-secondary)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                            Identitas Pemilik & KTP
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.875rem' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                              <span style={{ color: 'var(--color-text-secondary)' }}>Nama Lengkap:</span>
+                              <strong>{merchantDetail.currentSubmission.fullName}</strong>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <span style={{ color: 'var(--color-text-secondary)' }}>NIK:</span>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <code style={{ fontSize: '0.875rem', fontWeight: 600 }}>
+                                  {revealedNik[merchantDetail.profileId] || merchantDetail.currentSubmission.maskedNik}
+                                </code>
+                                {!revealedNik[merchantDetail.profileId] && (
+                                  <button
+                                    type="button"
+                                    disabled={loadingNik}
+                                    className="admin-btn admin-btn-outline"
+                                    style={{ padding: '2px 8px', fontSize: '0.75rem' }}
+                                    onClick={() => handleRevealNik(merchantDetail.profileId)}
+                                  >
+                                    {loadingNik ? 'Memuat...' : 'Lihat NIK'}
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                              <span style={{ color: 'var(--color-text-secondary)' }}>Telepon Akun:</span>
+                              <span>{merchantDetail.currentSubmission.accountPhoneSnapshot}</span>
+                            </div>
+                            {merchantDetail.currentSubmission.email && (
+                              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <span style={{ color: 'var(--color-text-secondary)' }}>Email:</span>
+                                <span>{merchantDetail.currentSubmission.email}</span>
+                              </div>
+                            )}
+                            {merchantDetail.currentSubmission.alternateContact && (
+                              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <span style={{ color: 'var(--color-text-secondary)' }}>Kontak Alternatif:</span>
+                                <span>{merchantDetail.currentSubmission.alternateContact}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Dokumen KTP */}
+                        <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: '12px' }}>
+                          <div style={{ fontWeight: 600, fontSize: '0.8125rem', color: 'var(--color-text-secondary)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                            Dokumen Identitas
+                          </div>
+                          {merchantDetail.currentSubmission.ktpDocument ? (
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <div>
+                                <div style={{ fontSize: '0.875rem', fontWeight: 500 }}>
+                                  {merchantDetail.currentSubmission.ktpDocument.sanitizedOriginalFilename}
+                                </div>
+                                <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
+                                  {(merchantDetail.currentSubmission.ktpDocument.sizeBytes / 1024).toFixed(1)} KB • {merchantDetail.currentSubmission.ktpDocument.mimeType}
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                className="admin-btn admin-btn-primary"
+                                style={{ padding: '4px 12px', fontSize: '0.8125rem' }}
+                                onClick={() => handleOpenKtpModal(merchantDetail.profileId)}
+                              >
+                                Lihat Dokumen KTP
+                              </button>
+                            </div>
+                          ) : (
+                            <div style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)' }}>
+                              Berkas KTP belum terhubung
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Data Usaha & Alamat */}
+                        <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: '12px' }}>
+                          <div style={{ fontWeight: 600, fontSize: '0.8125rem', color: 'var(--color-text-secondary)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                            Calon Usaha & Alamat Korespondensi
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.875rem' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                              <span style={{ color: 'var(--color-text-secondary)' }}>Nama Calon Usaha:</span>
+                              <strong>{merchantDetail.currentSubmission.proposedBusinessName}</strong>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                              <span style={{ color: 'var(--color-text-secondary)' }}>Kategori:</span>
+                              <span className="admin-badge admin-badge-info">{merchantDetail.currentSubmission.businessCategory}</span>
+                            </div>
+                            {merchantDetail.currentSubmission.businessDescription && (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                <span style={{ color: 'var(--color-text-secondary)', fontSize: '0.8125rem' }}>Deskripsi Usaha:</span>
+                                <span style={{ fontSize: '0.8125rem', fontStyle: 'italic', backgroundColor: 'var(--color-bg-surface)', padding: '6px 10px', borderRadius: 'var(--radius-sm)' }}>
+                                  {merchantDetail.currentSubmission.businessDescription}
+                                </span>
+                              </div>
+                            )}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '4px' }}>
+                              <span style={{ color: 'var(--color-text-secondary)', fontSize: '0.8125rem' }}>Alamat Korespondensi:</span>
+                              <div style={{ fontSize: '0.8125rem', backgroundColor: 'var(--color-bg-surface)', padding: '8px 10px', borderRadius: 'var(--radius-sm)' }}>
+                                <div>{merchantDetail.currentSubmission.addressDetail}</div>
+                                <div style={{ color: 'var(--color-text-muted)', marginTop: '4px' }}>
+                                  Kel. {merchantDetail.currentSubmission.villageOrSubdistrict}, Kec. {merchantDetail.currentSubmission.district}, {merchantDetail.currentSubmission.regencyOrCity}, {merchantDetail.currentSubmission.province}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Persetujuan & Kebijakan */}
+                        <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: '12px' }}>
+                          <div style={{ fontWeight: 600, fontSize: '0.8125rem', color: 'var(--color-text-secondary)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                            Persetujuan Syarat & Ketentuan
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.8125rem', color: 'var(--color-text-secondary)' }}>
+                            <div>✓ Kebenaran data disetujui ({new Date(merchantDetail.currentSubmission.dataAccuracyAcceptedAt).toLocaleString('id-ID')})</div>
+                            <div>✓ Ketentuan Merchant v{merchantDetail.currentSubmission.merchantTermsVersion} disetujui ({new Date(merchantDetail.currentSubmission.merchantTermsAcceptedAt).toLocaleString('id-ID')})</div>
+                            <div>✓ Kebijakan Privasi v{merchantDetail.currentSubmission.privacyNoticeVersion} disetujui ({new Date(merchantDetail.currentSubmission.privacyConsentAcceptedAt).toLocaleString('id-ID')})</div>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ padding: '16px', borderRadius: 'var(--radius-md)', backgroundColor: 'var(--color-bg-canvas)', border: '1px solid var(--color-border)', fontSize: '0.875rem', color: 'var(--color-text-secondary)', textAlign: 'center' }}>
+                        Profil tidak memiliki data pengajuan onboarding digital (dibuat sebelum Phase 2B).
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Controlled Status Actions */}
                 <div
                   style={{
@@ -934,6 +1180,110 @@ export default function VerifikasiPage() {
                 onClick={handleActionSubmit}
               >
                 {actionModal.submitting ? 'Memproses...' : `Ya, ${actionModal.action}`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Phase 2B: KTP Document Preview Modal */}
+      {ktpModalOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(15, 23, 42, 0.75)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1100,
+            padding: '16px',
+          }}
+          onClick={handleCloseKtpModal}
+        >
+          <div
+            style={{
+              backgroundColor: 'var(--color-bg-surface)',
+              borderRadius: 'var(--radius-lg)',
+              maxWidth: '640px',
+              width: '100%',
+              maxHeight: '90vh',
+              display: 'flex',
+              flexDirection: 'column',
+              boxShadow: 'var(--shadow-lg)',
+              overflow: 'hidden',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '16px 20px',
+                borderBottom: '1px solid var(--color-border)',
+              }}
+            >
+              <h3 style={{ margin: 0, fontSize: '1.0625rem', fontWeight: 600 }}>
+                Pratinjau Dokumen Identitas (KTP)
+              </h3>
+              <button
+                type="button"
+                onClick={handleCloseKtpModal}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.25rem', color: 'var(--color-text-muted)' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div
+              style={{
+                padding: '20px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                minHeight: '300px',
+                backgroundColor: '#0f172a',
+                overflow: 'auto',
+              }}
+            >
+              {loadingKtp && <LoadingState message="Mengunduh berkas identitas aman..." />}
+              {ktpError && !loadingKtp && (
+                <div style={{ color: '#f87171', fontSize: '0.875rem', textAlign: 'center' }}>
+                  {ktpError}
+                </div>
+              )}
+              {ktpImageSrc && !loadingKtp && (
+                <img
+                  src={ktpImageSrc}
+                  alt="Dokumen KTP Pemilik"
+                  style={{
+                    maxWidth: '100%',
+                    maxHeight: '70vh',
+                    objectFit: 'contain',
+                    borderRadius: 'var(--radius-md)',
+                  }}
+                />
+              )}
+            </div>
+
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                padding: '12px 20px',
+                borderTop: '1px solid var(--color-border)',
+              }}
+            >
+              <button
+                type="button"
+                className="admin-btn admin-btn-secondary"
+                onClick={handleCloseKtpModal}
+              >
+                Tutup
               </button>
             </div>
           </div>

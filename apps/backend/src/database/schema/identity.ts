@@ -8,6 +8,7 @@ import {
   unique,
   index,
   primaryKey,
+  integer,
 } from 'drizzle-orm/pg-core';
 
 /**
@@ -76,6 +77,10 @@ export const merchantProfiles = pgTable(
       .references(() => users.id, { onDelete: 'cascade' }),
     businessName: varchar('business_name', { length: 255 }),
     status: varchar('status', { length: 32 }).notNull().default('PENDING'),
+    currentSubmissionId: uuid('current_submission_id').references(
+      (): any => merchantOnboardingSubmissions.id,
+      { onDelete: 'set null' },
+    ),
     createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' })
       .notNull()
       .defaultNow(),
@@ -87,6 +92,7 @@ export const merchantProfiles = pgTable(
     unique('uq_merchant_profiles_user_id').on(table.userId),
     index('idx_merchant_profiles_user_status').on(table.userId, table.status),
     index('idx_merchant_profiles_status_created').on(table.status, table.createdAt),
+    index('idx_merchant_profiles_current_submission').on(table.currentSubmissionId),
   ],
 );
 
@@ -141,6 +147,10 @@ export const profileVerificationAuditLogs = pgTable(
     toStatus: varchar('to_status', { length: 32 }).notNull(),
     reason: text('reason'),
     requestId: varchar('request_id', { length: 128 }),
+    submissionId: uuid('submission_id').references(
+      (): any => merchantOnboardingSubmissions.id,
+      { onDelete: 'set null' },
+    ),
     createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' })
       .notNull()
       .defaultNow(),
@@ -152,11 +162,145 @@ export const profileVerificationAuditLogs = pgTable(
       table.createdAt,
     ),
     index('idx_profile_verification_audit_actor').on(table.actorAdminId),
+    index('idx_profile_verification_audit_submission').on(table.submissionId),
   ],
 );
 
 export type ProfileVerificationAuditLogEntity = typeof profileVerificationAuditLogs.$inferSelect;
 export type NewProfileVerificationAuditLogEntity = typeof profileVerificationAuditLogs.$inferInsert;
+
+/**
+ * Merchant Onboarding Documents table.
+ * Private metadata for uploaded identity documents (KTP).
+ * Physical blobs live outside PostgreSQL in private storage abstraction.
+ */
+export const merchantOnboardingDocuments = pgTable(
+  'merchant_onboarding_documents',
+  {
+    id: uuid('id').primaryKey(),
+    ownerUserId: uuid('owner_user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    documentType: varchar('document_type', { length: 32 }).notNull().default('KTP_FRONT'),
+    storageKey: varchar('storage_key', { length: 512 }).notNull(),
+    sanitizedOriginalFilename: varchar('sanitized_original_filename', { length: 255 }).notNull(),
+    mimeType: varchar('mime_type', { length: 64 }).notNull(),
+    sizeBytes: integer('size_bytes').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index('idx_merchant_onboarding_docs_owner').on(table.ownerUserId),
+    unique('uq_merchant_onboarding_docs_key').on(table.storageKey),
+  ],
+);
+
+export type MerchantOnboardingDocumentEntity = typeof merchantOnboardingDocuments.$inferSelect;
+export type NewMerchantOnboardingDocumentEntity = typeof merchantOnboardingDocuments.$inferInsert;
+
+/**
+ * Merchant Onboarding Drafts table.
+ * Exactly one mutable draft per user.
+ */
+export const merchantOnboardingDrafts = pgTable(
+  'merchant_onboarding_drafts',
+  {
+    id: uuid('id').primaryKey(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    fullName: varchar('full_name', { length: 255 }),
+    nik: varchar('nik', { length: 32 }),
+    email: varchar('email', { length: 255 }),
+    alternateContact: varchar('alternate_contact', { length: 64 }),
+    proposedBusinessName: varchar('proposed_business_name', { length: 255 }),
+    businessCategory: varchar('business_category', { length: 64 }),
+    businessDescription: text('business_description'),
+    province: varchar('province', { length: 128 }),
+    regencyOrCity: varchar('regency_or_city', { length: 128 }),
+    district: varchar('district', { length: 128 }),
+    villageOrSubdistrict: varchar('village_or_subdistrict', { length: 128 }),
+    addressDetail: text('address_detail'),
+    ktpDocumentId: uuid('ktp_document_id').references(
+      () => merchantOnboardingDocuments.id,
+      { onDelete: 'set null' },
+    ),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    unique('uq_merchant_onboarding_drafts_user_id').on(table.userId),
+    index('idx_merchant_onboarding_drafts_user_id').on(table.userId),
+  ],
+);
+
+export type MerchantOnboardingDraftEntity = typeof merchantOnboardingDrafts.$inferSelect;
+export type NewMerchantOnboardingDraftEntity = typeof merchantOnboardingDrafts.$inferInsert;
+
+/**
+ * Merchant Onboarding Submissions table.
+ * Immutable snapshot created upon submission.
+ * Status: PENDING | APPROVED | REJECTED
+ */
+export const merchantOnboardingSubmissions = pgTable(
+  'merchant_onboarding_submissions',
+  {
+    id: uuid('id').primaryKey(),
+    merchantProfileId: uuid('merchant_profile_id')
+      .notNull()
+      .references(() => merchantProfiles.id, { onDelete: 'cascade' }),
+    submittedByUserId: uuid('submitted_by_user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'restrict' }),
+    revisionNumber: integer('revision_number').notNull(),
+    supersedesSubmissionId: uuid('supersedes_submission_id').references(
+      (): any => merchantOnboardingSubmissions.id,
+      { onDelete: 'set null' },
+    ),
+    status: varchar('status', { length: 32 }).notNull().default('PENDING'),
+    fullName: varchar('full_name', { length: 255 }).notNull(),
+    nik: varchar('nik', { length: 32 }).notNull(),
+    accountPhoneSnapshot: varchar('account_phone_snapshot', { length: 32 }).notNull(),
+    email: varchar('email', { length: 255 }),
+    alternateContact: varchar('alternate_contact', { length: 64 }),
+    proposedBusinessName: varchar('proposed_business_name', { length: 255 }).notNull(),
+    businessCategory: varchar('business_category', { length: 64 }).notNull(),
+    businessDescription: text('business_description'),
+    province: varchar('province', { length: 128 }).notNull(),
+    regencyOrCity: varchar('regency_or_city', { length: 128 }).notNull(),
+    district: varchar('district', { length: 128 }).notNull(),
+    villageOrSubdistrict: varchar('village_or_subdistrict', { length: 128 }).notNull(),
+    addressDetail: text('address_detail').notNull(),
+    ktpDocumentId: uuid('ktp_document_id')
+      .notNull()
+      .references(() => merchantOnboardingDocuments.id, { onDelete: 'restrict' }),
+    dataAccuracyAcceptedAt: timestamp('data_accuracy_accepted_at', { withTimezone: true, mode: 'date' }).notNull(),
+    merchantTermsAcceptedAt: timestamp('merchant_terms_accepted_at', { withTimezone: true, mode: 'date' }).notNull(),
+    merchantTermsVersion: varchar('merchant_terms_version', { length: 32 }).notNull(),
+    privacyConsentAcceptedAt: timestamp('privacy_consent_accepted_at', { withTimezone: true, mode: 'date' }).notNull(),
+    privacyNoticeVersion: varchar('privacy_notice_version', { length: 32 }).notNull(),
+    submittedAt: timestamp('submitted_at', { withTimezone: true, mode: 'date' })
+      .notNull()
+      .defaultNow(),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    unique('uq_merchant_submissions_profile_revision').on(table.merchantProfileId, table.revisionNumber),
+    index('idx_merchant_submissions_profile_id').on(table.merchantProfileId),
+    index('idx_merchant_submissions_user_id').on(table.submittedByUserId),
+    index('idx_merchant_submissions_status').on(table.status),
+  ],
+);
+
+export type MerchantOnboardingSubmissionEntity = typeof merchantOnboardingSubmissions.$inferSelect;
+export type NewMerchantOnboardingSubmissionEntity = typeof merchantOnboardingSubmissions.$inferInsert;
 
 /**
  * Admin Accounts table.

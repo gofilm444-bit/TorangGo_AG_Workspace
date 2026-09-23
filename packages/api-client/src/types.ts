@@ -94,6 +94,16 @@ export type DriverVerificationItemDto = components['schemas']['DriverVerificatio
 export type DriverVerificationListResponseDto = components['schemas']['DriverVerificationListResponseDto'];
 export type DriverVerificationDetailResponseDto = components['schemas']['DriverVerificationDetailResponseDto'];
 
+export type MerchantOnboardingDocumentDto = components['schemas']['MerchantOnboardingDocumentDto'];
+export type MerchantOnboardingSubmissionDto = components['schemas']['MerchantOnboardingSubmissionDto'];
+export type MerchantOnboardingDraftDto = components['schemas']['MerchantOnboardingDraftDto'];
+export type MerchantOnboardingStatusResponseDto = components['schemas']['MerchantOnboardingStatusResponseDto'];
+export type SaveMerchantOnboardingDraftDto = components['schemas']['SaveMerchantOnboardingDraftDto'];
+export type SubmitMerchantOnboardingDto = components['schemas']['SubmitMerchantOnboardingDto'];
+export type ApproveMerchantVerificationActionDto = components['schemas']['ApproveMerchantVerificationActionDto'];
+export type RejectMerchantVerificationActionDto = components['schemas']['RejectMerchantVerificationActionDto'];
+export type RevealNikResponseDto = components['schemas']['RevealNikResponseDto'];
+
 export interface VerificationQueryOptions {
   status?: 'PENDING' | 'APPROVED' | 'REJECTED' | 'SUSPENDED';
   q?: string;

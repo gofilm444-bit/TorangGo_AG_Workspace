@@ -440,6 +440,91 @@
         ]
       }
     },
+    "/api/v1/admin/verifications/merchants/{profileId}/reveal-nik": {
+      "get": {
+        "operationId": "AdminVerificationController_revealMerchantNik",
+        "parameters": [
+          {
+            "name": "profileId",
+            "required": true,
+            "in": "path",
+            "description": "Merchant profile UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevealNikResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Merchant profile not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Reveal full unmasked NIK for merchant verification",
+        "tags": [
+          "Admin Verification"
+        ]
+      }
+    },
+    "/api/v1/admin/verifications/merchants/{profileId}/documents/ktp": {
+      "get": {
+        "operationId": "AdminVerificationController_streamMerchantKtp",
+        "parameters": [
+          {
+            "name": "profileId",
+            "required": true,
+            "in": "path",
+            "description": "Merchant profile UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Binary stream of KTP document"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Merchant profile or document not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Stream merchant KTP document",
+        "tags": [
+          "Admin Verification"
+        ]
+      }
+    },
     "/api/v1/admin/verifications/merchants/{profileId}/approve": {
       "post": {
         "operationId": "AdminVerificationController_approveMerchant",
@@ -459,7 +544,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ApproveVerificationActionDto"
+                "$ref": "#/components/schemas/ApproveMerchantVerificationActionDto"
               }
             }
           }
@@ -521,7 +606,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ReasonRequiredVerificationActionDto"
+                "$ref": "#/components/schemas/RejectMerchantVerificationActionDto"
               }
             }
           }
@@ -1060,6 +1145,290 @@
         "summary": "Reactivate a suspended driver profile with reason",
         "tags": [
           "Admin Verification"
+        ]
+      }
+    },
+    "/api/v1/merchant/onboarding": {
+      "get": {
+        "operationId": "MerchantOnboardingController_getStatus",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MerchantOnboardingStatusResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get current merchant onboarding gate state and data",
+        "tags": [
+          "Merchant Onboarding"
+        ]
+      }
+    },
+    "/api/v1/merchant/onboarding/draft": {
+      "post": {
+        "operationId": "MerchantOnboardingController_getOrCreateDraft",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MerchantOnboardingDraftDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "409": {
+            "description": "Profile already pending, approved, or suspended"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get or create single active onboarding draft",
+        "tags": [
+          "Merchant Onboarding"
+        ]
+      },
+      "patch": {
+        "operationId": "MerchantOnboardingController_saveDraft",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveMerchantOnboardingDraftDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MerchantOnboardingDraftDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "404": {
+            "description": "Draft not found"
+          },
+          "409": {
+            "description": "Cannot edit in current profile state"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Autosave fields in the active onboarding draft",
+        "tags": [
+          "Merchant Onboarding"
+        ]
+      }
+    },
+    "/api/v1/merchant/onboarding/draft/ktp": {
+      "post": {
+        "operationId": "MerchantOnboardingController_uploadKtp",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Front-side KTP image file (JPEG or PNG, max 5 MB)"
+                  }
+                },
+                "required": [
+                  "file"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MerchantOnboardingDocumentDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid file, invalid magic bytes, or size exceeds 5MB"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "404": {
+            "description": "Draft not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Upload or replace front-side KTP for the active draft (JPEG/PNG, max 5MB)",
+        "tags": [
+          "Merchant Onboarding"
+        ]
+      }
+    },
+    "/api/v1/merchant/onboarding/documents/{documentId}/content": {
+      "get": {
+        "operationId": "MerchantOnboardingController_getDocumentContent",
+        "parameters": [
+          {
+            "name": "documentId",
+            "required": true,
+            "in": "path",
+            "description": "Document UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Document image binary stream"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "403": {
+            "description": "Forbidden (not document owner)"
+          },
+          "404": {
+            "description": "Document not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Stream private KTP image content for document owner",
+        "tags": [
+          "Merchant Onboarding"
+        ]
+      }
+    },
+    "/api/v1/merchant/onboarding/submit": {
+      "post": {
+        "operationId": "MerchantOnboardingController_submit",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitMerchantOnboardingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MerchantOnboardingStatusResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Incomplete draft or missing mandatory consents"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "409": {
+            "description": "Conflict: profile already in review or active"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Submit onboarding draft for administrative verification",
+        "tags": [
+          "Merchant Onboarding"
+        ]
+      }
+    },
+    "/api/v1/merchant/onboarding/repair": {
+      "post": {
+        "operationId": "MerchantOnboardingController_repair",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MerchantOnboardingDraftDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "409": {
+            "description": "Conflict: profile is not in REJECTED status"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create revision draft from rejected submission for repair",
+        "tags": [
+          "Merchant Onboarding"
         ]
       }
     }
@@ -1680,6 +2049,195 @@
           "total"
         ]
       },
+      "MerchantOnboardingDocumentDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "018f6c5e-8b1b-7a6c-9c3f-4e5f6a7b8c9d"
+          },
+          "documentType": {
+            "type": "string",
+            "example": "KTP_FRONT"
+          },
+          "sanitizedOriginalFilename": {
+            "type": "string",
+            "example": "ktp_depan.jpg"
+          },
+          "mimeType": {
+            "type": "string",
+            "example": "image/jpeg"
+          },
+          "sizeBytes": {
+            "type": "number",
+            "example": 1048576
+          },
+          "createdAt": {
+            "type": "string",
+            "example": "2026-09-21T03:00:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "documentType",
+          "sanitizedOriginalFilename",
+          "mimeType",
+          "sizeBytes",
+          "createdAt"
+        ]
+      },
+      "MerchantOnboardingSubmissionDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "018f6c5e-8b1b-7a6c-9c3f-4e5f6a7b8c9d"
+          },
+          "merchantProfileId": {
+            "type": "string",
+            "example": "018f6c5e-8b1b-7a6c-9c3f-4e5f6a7b8c9d"
+          },
+          "revisionNumber": {
+            "type": "number",
+            "example": 1
+          },
+          "supersedesSubmissionId": {
+            "type": "string",
+            "nullable": true,
+            "example": null
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "APPROVED",
+              "REJECTED"
+            ],
+            "example": "PENDING"
+          },
+          "fullName": {
+            "type": "string",
+            "example": "John Doe"
+          },
+          "maskedNik": {
+            "type": "string",
+            "example": "************8901",
+            "description": "Masked NIK by default"
+          },
+          "accountPhoneSnapshot": {
+            "type": "string",
+            "example": "+6281234567890"
+          },
+          "email": {
+            "type": "string",
+            "nullable": true,
+            "example": "owner@example.com"
+          },
+          "alternateContact": {
+            "type": "string",
+            "nullable": true,
+            "example": "+6281987654321"
+          },
+          "proposedBusinessName": {
+            "type": "string",
+            "example": "Warung Torang Mantap"
+          },
+          "businessCategory": {
+            "type": "string",
+            "example": "KULINER"
+          },
+          "businessDescription": {
+            "type": "string",
+            "nullable": true,
+            "example": "Menyediakan masakan nusantara"
+          },
+          "province": {
+            "type": "string",
+            "example": "Sulawesi Utara"
+          },
+          "regencyOrCity": {
+            "type": "string",
+            "example": "Kota Manado"
+          },
+          "district": {
+            "type": "string",
+            "example": "Wenang"
+          },
+          "villageOrSubdistrict": {
+            "type": "string",
+            "example": "Tikala Baru"
+          },
+          "addressDetail": {
+            "type": "string",
+            "example": "Jl. Sam Ratulangi No. 123"
+          },
+          "ktpDocumentId": {
+            "type": "string",
+            "example": "018f6c5e-8b1b-7a6c-9c3f-4e5f6a7b8c9d"
+          },
+          "ktpDocument": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MerchantOnboardingDocumentDto"
+              }
+            ]
+          },
+          "dataAccuracyAcceptedAt": {
+            "type": "string",
+            "example": "2026-09-21T03:00:00.000Z"
+          },
+          "merchantTermsAcceptedAt": {
+            "type": "string",
+            "example": "2026-09-21T03:00:00.000Z"
+          },
+          "merchantTermsVersion": {
+            "type": "string",
+            "example": "1.0"
+          },
+          "privacyConsentAcceptedAt": {
+            "type": "string",
+            "example": "2026-09-21T03:00:00.000Z"
+          },
+          "privacyNoticeVersion": {
+            "type": "string",
+            "example": "1.0"
+          },
+          "submittedAt": {
+            "type": "string",
+            "example": "2026-09-21T03:00:00.000Z"
+          },
+          "rejectionReason": {
+            "type": "string",
+            "nullable": true,
+            "example": null
+          }
+        },
+        "required": [
+          "id",
+          "merchantProfileId",
+          "revisionNumber",
+          "status",
+          "fullName",
+          "maskedNik",
+          "accountPhoneSnapshot",
+          "proposedBusinessName",
+          "businessCategory",
+          "province",
+          "regencyOrCity",
+          "district",
+          "villageOrSubdistrict",
+          "addressDetail",
+          "ktpDocumentId",
+          "dataAccuracyAcceptedAt",
+          "merchantTermsAcceptedAt",
+          "merchantTermsVersion",
+          "privacyConsentAcceptedAt",
+          "privacyNoticeVersion",
+          "submittedAt"
+        ]
+      },
       "VerificationAuditLogItemDto": {
         "type": "object",
         "properties": {
@@ -1808,6 +2366,20 @@
             "type": "string",
             "example": "2026-09-21T03:00:00.000Z"
           },
+          "currentSubmissionId": {
+            "type": "string",
+            "nullable": true,
+            "example": "018f6c5e-8b1b-7a6c-9c3f-4e5f6a7b8c9d"
+          },
+          "currentSubmission": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MerchantOnboardingSubmissionDto"
+              }
+            ]
+          },
           "auditLogs": {
             "type": "array",
             "items": {
@@ -1825,9 +2397,27 @@
           "auditLogs"
         ]
       },
-      "ApproveVerificationActionDto": {
+      "RevealNikResponseDto": {
         "type": "object",
         "properties": {
+          "nik": {
+            "type": "string",
+            "example": "7171012345678901",
+            "description": "Full 16-digit unmasked NIK"
+          }
+        },
+        "required": [
+          "nik"
+        ]
+      },
+      "ApproveMerchantVerificationActionDto": {
+        "type": "object",
+        "properties": {
+          "expectedSubmissionId": {
+            "type": "string",
+            "description": "Target submission UUID expected by admin to prevent stale approvals",
+            "example": "018f6c5e-8b1b-7a6c-9c3f-4e5f6a7b8c9d"
+          },
           "reason": {
             "type": "string",
             "description": "Optional administrative note or approval reason (max 1000 characters)",
@@ -1836,6 +2426,26 @@
             "nullable": true
           }
         }
+      },
+      "RejectMerchantVerificationActionDto": {
+        "type": "object",
+        "properties": {
+          "expectedSubmissionId": {
+            "type": "string",
+            "description": "Target submission UUID expected by admin to prevent stale rejections",
+            "example": "018f6c5e-8b1b-7a6c-9c3f-4e5f6a7b8c9d"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Mandatory administrative justification reason (min 3, max 1000 characters)",
+            "minLength": 3,
+            "maxLength": 1000,
+            "example": "Foto KTP buram dan tidak terbaca"
+          }
+        },
+        "required": [
+          "reason"
+        ]
       },
       "ReasonRequiredVerificationActionDto": {
         "type": "object",
@@ -1992,6 +2602,295 @@
           "createdAt",
           "updatedAt",
           "auditLogs"
+        ]
+      },
+      "ApproveVerificationActionDto": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "description": "Optional administrative note or approval reason (max 1000 characters)",
+            "maxLength": 1000,
+            "example": "Identitas dan profil valid",
+            "nullable": true
+          }
+        }
+      },
+      "MerchantOnboardingDraftDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "018f6c5e-8b1b-7a6c-9c3f-4e5f6a7b8c9d"
+          },
+          "userId": {
+            "type": "string",
+            "example": "018f6c5e-8b1b-7a6c-9c3f-4e5f6a7b8c9d"
+          },
+          "fullName": {
+            "type": "string",
+            "nullable": true,
+            "example": "John Doe"
+          },
+          "nik": {
+            "type": "string",
+            "nullable": true,
+            "example": "7171012345678901"
+          },
+          "accountPhone": {
+            "type": "string",
+            "example": "+6281234567890",
+            "description": "Authoritative account phone number (read-only)"
+          },
+          "email": {
+            "type": "string",
+            "nullable": true,
+            "example": "owner@example.com"
+          },
+          "alternateContact": {
+            "type": "string",
+            "nullable": true,
+            "example": "+6281987654321"
+          },
+          "proposedBusinessName": {
+            "type": "string",
+            "nullable": true,
+            "example": "Warung Torang Mantap"
+          },
+          "businessCategory": {
+            "type": "string",
+            "nullable": true,
+            "example": "KULINER"
+          },
+          "businessDescription": {
+            "type": "string",
+            "nullable": true,
+            "example": "Menyediakan masakan nusantara"
+          },
+          "province": {
+            "type": "string",
+            "nullable": true,
+            "example": "Sulawesi Utara"
+          },
+          "regencyOrCity": {
+            "type": "string",
+            "nullable": true,
+            "example": "Kota Manado"
+          },
+          "district": {
+            "type": "string",
+            "nullable": true,
+            "example": "Wenang"
+          },
+          "villageOrSubdistrict": {
+            "type": "string",
+            "nullable": true,
+            "example": "Tikala Baru"
+          },
+          "addressDetail": {
+            "type": "string",
+            "nullable": true,
+            "example": "Jl. Sam Ratulangi No. 123"
+          },
+          "ktpDocumentId": {
+            "type": "string",
+            "nullable": true,
+            "example": "018f6c5e-8b1b-7a6c-9c3f-4e5f6a7b8c9d"
+          },
+          "ktpDocument": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MerchantOnboardingDocumentDto"
+              }
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "example": "2026-09-21T03:00:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "example": "2026-09-21T03:00:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "userId",
+          "accountPhone",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "MerchantOnboardingStatusResponseDto": {
+        "type": "object",
+        "properties": {
+          "state": {
+            "type": "string",
+            "enum": [
+              "NOT_STARTED",
+              "DRAFT",
+              "PENDING",
+              "REJECTED",
+              "APPROVED",
+              "SUSPENDED"
+            ],
+            "example": "NOT_STARTED"
+          },
+          "merchantProfileId": {
+            "type": "string",
+            "nullable": true,
+            "example": null
+          },
+          "accountPhone": {
+            "type": "string",
+            "example": "+6281234567890"
+          },
+          "draft": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MerchantOnboardingDraftDto"
+              }
+            ]
+          },
+          "currentSubmission": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MerchantOnboardingSubmissionDto"
+              }
+            ]
+          },
+          "rejectionReason": {
+            "type": "string",
+            "nullable": true,
+            "example": null
+          },
+          "rejectionDate": {
+            "type": "string",
+            "nullable": true,
+            "example": null
+          },
+          "suspensionReason": {
+            "type": "string",
+            "nullable": true,
+            "example": null
+          },
+          "suspensionDate": {
+            "type": "string",
+            "nullable": true,
+            "example": null
+          }
+        },
+        "required": [
+          "state",
+          "accountPhone"
+        ]
+      },
+      "SaveMerchantOnboardingDraftDto": {
+        "type": "object",
+        "properties": {
+          "fullName": {
+            "type": "string",
+            "example": "John Doe",
+            "maxLength": 255,
+            "nullable": true
+          },
+          "nik": {
+            "type": "string",
+            "example": "7171012345678901",
+            "description": "Up to 16-digit numeric NIK",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "example": "owner@example.com",
+            "nullable": true,
+            "maxLength": 255
+          },
+          "alternateContact": {
+            "type": "string",
+            "example": "+6281987654321",
+            "nullable": true,
+            "maxLength": 64
+          },
+          "proposedBusinessName": {
+            "type": "string",
+            "example": "Warung Torang Mantap",
+            "maxLength": 255,
+            "nullable": true
+          },
+          "businessCategory": {
+            "type": "string",
+            "example": "KULINER",
+            "maxLength": 64,
+            "nullable": true
+          },
+          "businessDescription": {
+            "type": "string",
+            "example": "Menyediakan masakan khas nusantara",
+            "nullable": true,
+            "maxLength": 1000
+          },
+          "province": {
+            "type": "string",
+            "example": "Sulawesi Utara",
+            "maxLength": 128,
+            "nullable": true
+          },
+          "regencyOrCity": {
+            "type": "string",
+            "example": "Kota Manado",
+            "maxLength": 128,
+            "nullable": true
+          },
+          "district": {
+            "type": "string",
+            "example": "Wenang",
+            "maxLength": 128,
+            "nullable": true
+          },
+          "villageOrSubdistrict": {
+            "type": "string",
+            "example": "Tikala Baru",
+            "maxLength": 128,
+            "nullable": true
+          },
+          "addressDetail": {
+            "type": "string",
+            "example": "Jl. Sam Ratulangi No. 123",
+            "maxLength": 1000,
+            "nullable": true
+          }
+        }
+      },
+      "SubmitMerchantOnboardingDto": {
+        "type": "object",
+        "properties": {
+          "dataAccuracyAccepted": {
+            "type": "boolean",
+            "example": true,
+            "description": "Confirmation that supplied data is true and accurate"
+          },
+          "merchantTermsAccepted": {
+            "type": "boolean",
+            "example": true,
+            "description": "Acceptance of Merchant Terms & Conditions"
+          },
+          "privacyConsentAccepted": {
+            "type": "boolean",
+            "example": true,
+            "description": "Consent for personal data processing and privacy policy"
+          }
+        },
+        "required": [
+          "dataAccuracyAccepted",
+          "merchantTermsAccepted",
+          "privacyConsentAccepted"
         ]
       }
     }

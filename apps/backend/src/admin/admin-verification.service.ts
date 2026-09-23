@@ -26,12 +26,19 @@ import type {
   DriverVerificationDetailResponseDto,
 } from './dto/driver-verification.dto.js';
 import type { VerificationAuditLogItemDto } from './dto/verification-audit.dto.js';
+import {
+  PRIVATE_DOCUMENT_STORAGE,
+  type PrivateDocumentStorage,
+} from '../storage/storage.interface.js';
+import { maskNik } from '../merchant-onboarding/nik-utils.js';
+import type { MerchantOnboardingSubmissionDto } from '../merchant-onboarding/dto/merchant-onboarding.dto.js';
 
 interface RawMerchantRow {
   id: string;
   user_id: string;
   business_name: string | null;
   status: ProfileVerificationStatus;
+  current_submission_id: string | null;
   created_at: Date;
   updated_at: Date;
   phone: string;
@@ -81,6 +88,8 @@ export class AdminVerificationService {
     @Inject(PG_POOL_TOKEN)
     private readonly pool: pg.Pool,
     private readonly transactionService: TransactionService,
+    @Inject(PRIVATE_DOCUMENT_STORAGE)
+    private readonly storage: PrivateDocumentStorage,
   ) {}
 
   /**
@@ -125,6 +134,7 @@ export class AdminVerificationService {
          mp.user_id,
          mp.business_name,
          mp.status,
+         mp.current_submission_id,
          mp.created_at,
          mp.updated_at,
          u.phone
@@ -157,6 +167,7 @@ export class AdminVerificationService {
 
   /**
    * Get Merchant profile detail along with full audit log history.
+   * Get Merchant profile detail along with full audit log history and current onboarding submission.
    */
   async getMerchantDetail(profileId: string): Promise<MerchantVerificationDetailResponseDto> {
     const res = await this.pool.query<RawMerchantRow>(
@@ -165,6 +176,7 @@ export class AdminVerificationService {
          mp.user_id,
          mp.business_name,
          mp.status,
+         mp.current_submission_id,
          mp.created_at,
          mp.updated_at,
          u.phone
@@ -179,6 +191,92 @@ export class AdminVerificationService {
       throw new NotFoundError(`Merchant profile not found: ${profileId}`);
     }
 
+    let currentSubmission: MerchantOnboardingSubmissionDto | null = null;
+    if (row.current_submission_id) {
+      const subRes = await this.pool.query<{
+        id: string;
+        merchant_profile_id: string;
+        revision_number: number;
+        supersedes_submission_id: string | null;
+        status: 'PENDING' | 'APPROVED' | 'REJECTED';
+        full_name: string;
+        nik: string;
+        account_phone_snapshot: string;
+        email: string | null;
+        alternate_contact: string | null;
+        proposed_business_name: string;
+        business_category: string;
+        business_description: string | null;
+        province: string;
+        regency_or_city: string;
+        district: string;
+        village_or_subdistrict: string;
+        address_detail: string;
+        ktp_document_id: string;
+        data_accuracy_accepted_at: Date;
+        merchant_terms_accepted_at: Date;
+        merchant_terms_version: string;
+        privacy_consent_accepted_at: Date;
+        privacy_notice_version: string;
+        submitted_at: Date;
+        sanitized_original_filename: string | null;
+        mime_type: string | null;
+        size_bytes: number | null;
+        doc_created_at: Date | null;
+      }>(
+        `SELECT
+           s.*,
+           d.sanitized_original_filename,
+           d.mime_type,
+           d.size_bytes,
+           d.created_at AS doc_created_at
+         FROM merchant_onboarding_submissions s
+         LEFT JOIN merchant_onboarding_documents d ON d.id = s.ktp_document_id
+         WHERE s.id = $1;`,
+        [row.current_submission_id],
+      );
+      const sub = subRes.rows[0];
+      if (sub) {
+        currentSubmission = {
+          id: sub.id,
+          merchantProfileId: sub.merchant_profile_id,
+          revisionNumber: sub.revision_number,
+          supersedesSubmissionId: sub.supersedes_submission_id,
+          status: sub.status,
+          fullName: sub.full_name,
+          maskedNik: maskNik(sub.nik),
+          accountPhoneSnapshot: sub.account_phone_snapshot,
+          email: sub.email,
+          alternateContact: sub.alternate_contact,
+          proposedBusinessName: sub.proposed_business_name,
+          businessCategory: sub.business_category,
+          businessDescription: sub.business_description,
+          province: sub.province,
+          regencyOrCity: sub.regency_or_city,
+          district: sub.district,
+          villageOrSubdistrict: sub.village_or_subdistrict,
+          addressDetail: sub.address_detail,
+          ktpDocumentId: sub.ktp_document_id,
+          ktpDocument: sub.sanitized_original_filename
+            ? {
+                id: sub.ktp_document_id,
+                documentType: 'KTP_FRONT',
+                sanitizedOriginalFilename: sub.sanitized_original_filename,
+                mimeType: sub.mime_type!,
+                sizeBytes: Number(sub.size_bytes!),
+                createdAt: new Date(sub.doc_created_at!).toISOString(),
+              }
+            : null,
+          dataAccuracyAcceptedAt: new Date(sub.data_accuracy_accepted_at).toISOString(),
+          merchantTermsAcceptedAt: new Date(sub.merchant_terms_accepted_at).toISOString(),
+          merchantTermsVersion: sub.merchant_terms_version,
+          privacyConsentAcceptedAt: new Date(sub.privacy_consent_accepted_at).toISOString(),
+          privacyNoticeVersion: sub.privacy_notice_version,
+          submittedAt: new Date(sub.submitted_at).toISOString(),
+        };
+      }
+    }
+
     const auditLogs = await this.getAuditLogs('MERCHANT', profileId);
 
     return {
@@ -188,6 +286,8 @@ export class AdminVerificationService {
       businessName: row.business_name,
       displayName: row.business_name,
       status: row.status,
+      currentSubmissionId: row.current_submission_id,
+      currentSubmission,
       createdAt: row.created_at.toISOString(),
       updatedAt: row.updated_at.toISOString(),
       auditLogs,
@@ -306,6 +406,57 @@ export class AdminVerificationService {
   }
 
   /**
+   * Reveal full unmasked NIK for manual verification (authorized Admin only).
+   */
+  async revealMerchantNik(profileId: string): Promise<{ nik: string }> {
+    const res = await this.pool.query<{ nik: string }>(
+      `SELECT s.nik
+       FROM merchant_profiles mp
+       JOIN merchant_onboarding_submissions s ON s.id = mp.current_submission_id
+       WHERE mp.id = $1;`,
+      [profileId],
+    );
+    const row = res.rows[0];
+    if (!row) {
+      throw new NotFoundError(`Submission or profile not found for profile: ${profileId}`);
+    }
+    return { nik: row.nik };
+  }
+
+  /**
+   * Stream authorized KTP image content for administrative manual verification.
+   */
+  async streamMerchantKtp(
+    profileId: string,
+  ): Promise<{ stream: NodeJS.ReadableStream; mimeType: string; sizeBytes: number }> {
+    const res = await this.pool.query<{
+      storage_key: string;
+      mime_type: string;
+      size_bytes: number;
+    }>(
+      `SELECT d.storage_key, d.mime_type, d.size_bytes
+       FROM merchant_profiles mp
+       JOIN merchant_onboarding_submissions s ON s.id = mp.current_submission_id
+       JOIN merchant_onboarding_documents d ON d.id = s.ktp_document_id
+       WHERE mp.id = $1;`,
+      [profileId],
+    );
+    const row = res.rows[0];
+    if (!row) {
+      throw new NotFoundError(`KTP document not found for merchant profile: ${profileId}`);
+    }
+    const stored = await this.storage.get(row.storage_key);
+    if (!stored) {
+      throw new NotFoundError('KTP file content not found in storage');
+    }
+    return {
+      stream: stored.stream,
+      mimeType: row.mime_type,
+      sizeBytes: Number(row.size_bytes),
+    };
+  }
+
+  /**
    * Merchant Status Actions
    */
   async approveMerchant(
@@ -313,8 +464,16 @@ export class AdminVerificationService {
     actorAdminId: string,
     reason?: string,
     requestId?: string,
+    expectedSubmissionId?: string,
   ): Promise<MerchantVerificationDetailResponseDto> {
-    return this.transitionMerchant(profileId, 'APPROVE', actorAdminId, reason, requestId);
+    return this.transitionMerchant(
+      profileId,
+      'APPROVE',
+      actorAdminId,
+      reason,
+      requestId,
+      expectedSubmissionId,
+    );
   }
 
   async rejectMerchant(
@@ -322,8 +481,16 @@ export class AdminVerificationService {
     actorAdminId: string,
     reason: string,
     requestId?: string,
+    expectedSubmissionId?: string,
   ): Promise<MerchantVerificationDetailResponseDto> {
-    return this.transitionMerchant(profileId, 'REJECT', actorAdminId, reason, requestId);
+    return this.transitionMerchant(
+      profileId,
+      'REJECT',
+      actorAdminId,
+      reason,
+      requestId,
+      expectedSubmissionId,
+    );
   }
 
   async suspendMerchant(
@@ -392,6 +559,7 @@ export class AdminVerificationService {
     actorAdminId: string,
     rawReason?: string,
     requestId?: string,
+    expectedSubmissionId?: string,
   ): Promise<MerchantVerificationDetailResponseDto> {
     const validatedReason = this.validateActionReason(action, rawReason);
 
@@ -400,8 +568,9 @@ export class AdminVerificationService {
       const selectResult = await tx.execute<{
         id: string;
         status: ProfileVerificationStatus;
+        current_submission_id: string | null;
       }>(
-        sql`SELECT id, status FROM merchant_profiles WHERE id = ${profileId} FOR UPDATE;`,
+        sql`SELECT id, status, current_submission_id FROM merchant_profiles WHERE id = ${profileId} FOR UPDATE;`,
       );
 
       const profile = selectResult.rows[0];
@@ -421,19 +590,50 @@ export class AdminVerificationService {
       const now = new Date();
       const auditId = generateUuidV7();
 
-      // 3. Atomically update status
+      // 3. Stale-review protection & atomic submission mutation on APPROVE and REJECT
+      if (action === 'APPROVE' || action === 'REJECT') {
+        if (expectedSubmissionId) {
+          if (expectedSubmissionId !== profile.current_submission_id) {
+            throw new ConflictError(
+              'Pengajuan telah berubah. Muat ulang data terbaru sebelum melakukan verifikasi.',
+            );
+          }
+        }
+
+        if (profile.current_submission_id) {
+          // Lock current submission
+          const subResult = await tx.execute<{ id: string; status: string }>(
+            sql`SELECT id, status FROM merchant_onboarding_submissions WHERE id = ${profile.current_submission_id} FOR UPDATE;`,
+          );
+          const submission = subResult.rows[0];
+          if (!submission || submission.status !== 'PENDING') {
+            throw new ConflictError(
+              `Pengajuan merchant tidak dalam status PENDING (status saat ini: '${submission?.status}')`,
+            );
+          }
+
+          // Atomically update submission status (PENDING -> APPROVED or PENDING -> REJECTED)
+          await tx.execute(
+            sql`UPDATE merchant_onboarding_submissions
+                SET status = ${nextStatus}
+                WHERE id = ${profile.current_submission_id};`,
+          );
+        }
+      }
+
+      // 4. Atomically update profile status
       await tx.execute(
         sql`UPDATE merchant_profiles
             SET status = ${nextStatus}, updated_at = ${now}
             WHERE id = ${profileId};`,
       );
 
-      // 4. Atomically insert audit log
+      // 5. Atomically insert audit log
       await tx.execute(
         sql`INSERT INTO profile_verification_audit_logs
-            (id, profile_type, profile_id, actor_admin_id, action, from_status, to_status, reason, request_id, created_at)
+            (id, profile_type, profile_id, actor_admin_id, action, from_status, to_status, reason, request_id, submission_id, created_at)
             VALUES
-            (${auditId}, 'MERCHANT', ${profileId}, ${actorAdminId}, ${action}, ${profile.status}, ${nextStatus}, ${validatedReason}, ${requestId ?? null}, ${now});`,
+            (${auditId}, 'MERCHANT', ${profileId}, ${actorAdminId}, ${action}, ${profile.status}, ${nextStatus}, ${validatedReason}, ${requestId ?? null}, ${profile.current_submission_id ?? null}, ${now});`,
       );
     });
 

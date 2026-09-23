@@ -118,6 +118,9 @@ describe('Phase 1C Database Foundation & Persistence Suite', () => {
             'admin_role_permissions',
             'admin_recovery_codes',
             'profile_verification_audit_logs',
+            'merchant_onboarding_documents',
+            'merchant_onboarding_drafts',
+            'merchant_onboarding_submissions',
           ];
           for (const tbl of expectedTables) {
             assert.ok(publicTableNames.includes(tbl), `${tbl} table must exist in clean database`);

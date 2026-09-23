@@ -1,4 +1,4 @@
-﻿import {
+import {
   type ExceptionFilter,
   Catch,
   type ArgumentsHost,
@@ -72,7 +72,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     } else if (
       (exception as { status?: number; statusCode?: number })?.status === HttpStatus.PAYLOAD_TOO_LARGE ||
       (exception as { status?: number; statusCode?: number })?.statusCode === HttpStatus.PAYLOAD_TOO_LARGE ||
-      (exception as { type?: string })?.type === 'entity.too.large'
+      (exception as { type?: string })?.type === 'entity.too.large' ||
+      (exception as { code?: string })?.code === 'LIMIT_FILE_SIZE'
     ) {
       statusCode = HttpStatus.PAYLOAD_TOO_LARGE;
       code = ERROR_CODES.PAYLOAD_TOO_LARGE;

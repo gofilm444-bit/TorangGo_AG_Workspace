@@ -8,9 +8,17 @@ import type {
   AdminOverviewResponseDto,
   MerchantVerificationListResponseDto,
   MerchantVerificationDetailResponseDto,
+  ApproveMerchantVerificationActionDto,
+  RejectMerchantVerificationActionDto,
+  RevealNikResponseDto,
   DriverVerificationListResponseDto,
   DriverVerificationDetailResponseDto,
   VerificationQueryOptions,
+  MerchantOnboardingStatusResponseDto,
+  MerchantOnboardingDraftDto,
+  SaveMerchantOnboardingDraftDto,
+  MerchantOnboardingDocumentDto,
+  SubmitMerchantOnboardingDto,
 } from './types.js';
 
 
@@ -79,8 +87,16 @@ export class ApiClient {
       headers.set('X-CSRF-Token', csrfToken);
     }
 
-    // Set JSON content-type if body is provided and not already set
-    if (init.body && !headers.has('Content-Type')) {
+    // Set JSON content-type if body is provided and not already set (skip for FormData)
+    const isFormData =
+      (typeof FormData !== 'undefined' && init.body instanceof FormData) ||
+      (init.body != null &&
+        typeof init.body === 'object' &&
+        ((init.body as { constructor?: { name?: string } }).constructor?.name === 'FormData' ||
+          typeof (init.body as { getHeaders?: () => unknown }).getHeaders === 'function' ||
+          typeof (init.body as { append?: () => unknown }).append === 'function'));
+
+    if (init.body && !headers.has('Content-Type') && !isFormData) {
       headers.set('Content-Type', 'application/json');
     }
 
@@ -335,11 +351,26 @@ export class ApiClient {
   }
 
   /**
+   * Reveal full unmasked NIK for merchant verification.
+   */
+  async revealMerchantNik(
+    profileId: string,
+    options?: RequestOptions,
+  ): Promise<RevealNikResponseDto> {
+    const res = await this.request<RevealNikResponseDto>(
+      `/api/v1/admin/verifications/merchants/${profileId}/reveal-nik`,
+      { method: 'GET' },
+      options,
+    );
+    return res.data;
+  }
+
+  /**
    * Approve a pending merchant profile.
    */
   async approveMerchant(
     profileId: string,
-    body?: { reason?: string },
+    body?: ApproveMerchantVerificationActionDto,
     options?: RequestOptions,
   ): Promise<MerchantVerificationDetailResponseDto> {
     const res = await this.request<MerchantVerificationDetailResponseDto>(
@@ -355,7 +386,7 @@ export class ApiClient {
    */
   async rejectMerchant(
     profileId: string,
-    body: { reason: string },
+    body: RejectMerchantVerificationActionDto,
     options?: RequestOptions,
   ): Promise<MerchantVerificationDetailResponseDto> {
     const res = await this.request<MerchantVerificationDetailResponseDto>(
@@ -488,6 +519,117 @@ export class ApiClient {
     const res = await this.request<DriverVerificationDetailResponseDto>(
       `/api/v1/admin/verifications/drivers/${profileId}/reactivate`,
       { method: 'POST', body: JSON.stringify(body) },
+      options,
+    );
+    return res.data;
+  }
+
+  // ===========================================================================
+  // Phase 2B — Merchant Onboarding Methods
+  // ===========================================================================
+
+  /**
+   * Get current merchant onboarding gate state and data.
+   */
+  async getMerchantOnboardingStatus(
+    options?: RequestOptions,
+  ): Promise<MerchantOnboardingStatusResponseDto> {
+    const res = await this.request<MerchantOnboardingStatusResponseDto>(
+      '/api/v1/merchant/onboarding',
+      { method: 'GET' },
+      options,
+    );
+    return res.data;
+  }
+
+  /**
+   * Get or create single active onboarding draft.
+   */
+  async getOrCreateMerchantOnboardingDraft(
+    options?: RequestOptions,
+  ): Promise<MerchantOnboardingDraftDto> {
+    const res = await this.request<MerchantOnboardingDraftDto>(
+      '/api/v1/merchant/onboarding/draft',
+      { method: 'POST' },
+      options,
+    );
+    return res.data;
+  }
+
+  /**
+   * Autosave fields in active onboarding draft.
+   */
+  async saveMerchantOnboardingDraft(
+    body: SaveMerchantOnboardingDraftDto,
+    options?: RequestOptions,
+  ): Promise<MerchantOnboardingDraftDto> {
+    const res = await this.request<MerchantOnboardingDraftDto>(
+      '/api/v1/merchant/onboarding/draft',
+      { method: 'PATCH', body: JSON.stringify(body) },
+      options,
+    );
+    return res.data;
+  }
+
+  /**
+   * Upload or replace front-side KTP for active draft.
+   */
+  async uploadMerchantKtp(
+    file: Blob | FormData | { uri: string; name?: string; type?: string } | unknown,
+    filename = 'ktp.jpg',
+    options?: RequestOptions,
+  ): Promise<MerchantOnboardingDocumentDto> {
+    let body: BodyInit;
+    if (typeof FormData !== 'undefined' && file instanceof FormData) {
+      body = file;
+    } else if (file && typeof file === 'object' && 'uri' in (file as object)) {
+      const rnFile = file as { uri: string; name?: string; type?: string };
+      const formData = new FormData();
+      formData.append('file', {
+        uri: rnFile.uri,
+        name: rnFile.name || filename,
+        type: rnFile.type || 'image/jpeg',
+      } as unknown as Blob);
+      body = formData as unknown as BodyInit;
+    } else if (file && typeof file === 'object' && (file as { constructor?: { name?: string } }).constructor?.name === 'FormData') {
+      body = file as BodyInit;
+    } else {
+      const formData = new FormData();
+      formData.append('file', file as Blob, filename);
+      body = formData;
+    }
+    const res = await this.request<MerchantOnboardingDocumentDto>(
+      '/api/v1/merchant/onboarding/draft/ktp',
+      { method: 'POST', body },
+      options,
+    );
+    return res.data;
+  }
+
+  /**
+   * Submit onboarding draft for administrative verification.
+   */
+  async submitMerchantOnboarding(
+    body: SubmitMerchantOnboardingDto,
+    options?: RequestOptions,
+  ): Promise<MerchantOnboardingStatusResponseDto> {
+    const res = await this.request<MerchantOnboardingStatusResponseDto>(
+      '/api/v1/merchant/onboarding/submit',
+      { method: 'POST', body: JSON.stringify(body) },
+      options,
+    );
+    return res.data;
+  }
+
+  /**
+   * Create revision draft from rejected submission for repair.
+   */
+  async repairMerchantOnboarding(
+    options?: RequestOptions,
+  ): Promise<MerchantOnboardingDraftDto> {
+    const res = await this.request<MerchantOnboardingDraftDto>(
+      '/api/v1/merchant/onboarding/repair',
+      { method: 'POST' },
       options,
     );
     return res.data;

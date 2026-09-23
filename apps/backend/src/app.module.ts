@@ -4,6 +4,8 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { HealthModule } from './health/health.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { AdminModule } from './admin/admin.module.js';
+import { StorageModule } from './storage/storage.module.js';
+import { MerchantOnboardingModule } from './merchant-onboarding/merchant-onboarding.module.js';
 import { StructuredLogger } from './common/logging/logger.service.js';
 import {
   IDEMPOTENCY_STORE_TOKEN,
@@ -18,6 +20,7 @@ const config = loadAppConfig();
 @Module({
   imports: [
     DatabaseModule,
+    StorageModule,
     ThrottlerModule.forRoot([
       {
         name: 'default',
@@ -28,6 +31,7 @@ const config = loadAppConfig();
     HealthModule,
     AuthModule,
     AdminModule,
+    MerchantOnboardingModule,
   ],
   providers: [
     StructuredLogger,

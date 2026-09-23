@@ -84,13 +84,24 @@ describe('Phase 2A2: Admin Web Verification Workflow Suite', () => {
     assert.ok(content.includes('randomUUID'), 'Uses UUID for idempotency key');
   });
 
-  it('renders audit history timeline without document review data', () => {
+  it('renders audit history timeline and Phase 2B merchant KTP review while keeping driver pure 2A2', () => {
     const content = fs.readFileSync(pagePath, 'utf-8');
     assert.ok(content.includes('Riwayat Audit Verifikasi'), 'Renders audit history section');
     assert.ok(content.includes('auditLogs'), 'Reads auditLogs array');
-    assert.ok(!content.includes('KTP'), 'No fake KTP documents');
-    assert.ok(!content.includes('SIM'), 'No fake SIM documents');
-    assert.ok(!content.includes('STNK'), 'No fake STNK documents');
+
+    // Phase 2B: Merchant has authentic KTP document review & NIK reveal
+    assert.ok(content.includes('revealMerchantNik'), 'Calls revealMerchantNik API');
+    assert.ok(content.includes('Lihat NIK'), 'Provides button to reveal masked NIK');
+    assert.ok(content.includes('Lihat Dokumen KTP'), 'Provides button to preview KTP document');
+    assert.ok(content.includes('Pratinjau Dokumen Identitas (KTP)'), 'Renders KTP modal preview');
+
+    // Stale review guard (expectedSubmissionId & 409 conflict handling)
+    assert.ok(content.includes('expectedSubmissionId'), 'Passes expectedSubmissionId to avoid stale reviews');
+    assert.ok(content.includes('Pengajuan telah berubah'), 'Notifies admin on 409 conflict when submission changes');
+
+    // Out of scope check: Driver verification remains pure 2A2 without SIM or STNK
+    assert.ok(!content.includes('SIM'), 'No SIM documents for driver in Phase 2B');
+    assert.ok(!content.includes('STNK'), 'No STNK documents for driver in Phase 2B');
   });
 
   it('enforces exact canonical status transition actions and terminal REJECTED state', () => {
@@ -102,10 +113,10 @@ describe('Phase 2A2: Admin Web Verification Workflow Suite', () => {
     assert.ok(content.includes("currentDetail.status === 'SUSPENDED'"), 'Renders actions for SUSPENDED');
     assert.ok(content.includes("currentDetail.status === 'REJECTED'"), 'Handles REJECTED status view');
 
-    // REJECTED profile is terminal for Admin in Phase 2A2: zero mutation buttons
+    // REJECTED profile is terminal for Admin in Phase 2A2/2B: zero mutation buttons
     assert.ok(
       content.includes('peninjauan ulang profil yang ditolak tidak dapat diaktifkan kembali oleh Admin secara sepihak'),
-      'Informs user that REJECTED profile is terminal for Admin in Phase 2A2',
+      'Informs user that REJECTED profile is terminal for Admin in Phase 2A2/2B',
     );
     assert.ok(!content.includes('Buka Kembali'), 'Must not contain Buka Kembali button');
   });

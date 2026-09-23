@@ -3,3 +3,4 @@ export * from './primitives.js';
 export * from './errors.js';
 export * from './envelope.js';
 export * from './admin.js';
+export * from './merchant-onboarding.js';

@@ -228,6 +228,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/verifications/merchants/{profileId}/reveal-nik": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Reveal full unmasked NIK for merchant verification */
+        get: operations["AdminVerificationController_revealMerchantNik"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/verifications/merchants/{profileId}/documents/ktp": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Stream merchant KTP document */
+        get: operations["AdminVerificationController_streamMerchantKtp"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/verifications/merchants/{profileId}/approve": {
         parameters: {
             query?: never;
@@ -392,6 +426,109 @@ export interface paths {
         put?: never;
         /** Reactivate a suspended driver profile with reason */
         post: operations["AdminVerificationController_reactivateDriver"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/merchant/onboarding": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get current merchant onboarding gate state and data */
+        get: operations["MerchantOnboardingController_getStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/merchant/onboarding/draft": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Get or create single active onboarding draft */
+        post: operations["MerchantOnboardingController_getOrCreateDraft"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Autosave fields in the active onboarding draft */
+        patch: operations["MerchantOnboardingController_saveDraft"];
+        trace?: never;
+    };
+    "/api/v1/merchant/onboarding/draft/ktp": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Upload or replace front-side KTP for the active draft (JPEG/PNG, max 5MB) */
+        post: operations["MerchantOnboardingController_uploadKtp"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/merchant/onboarding/documents/{documentId}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Stream private KTP image content for document owner */
+        get: operations["MerchantOnboardingController_getDocumentContent"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/merchant/onboarding/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Submit onboarding draft for administrative verification */
+        post: operations["MerchantOnboardingController_submit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/merchant/onboarding/repair": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create revision draft from rejected submission for repair */
+        post: operations["MerchantOnboardingController_repair"];
         delete?: never;
         options?: never;
         head?: never;
@@ -687,6 +824,81 @@ export interface components {
             /** @example 42 */
             total: number;
         };
+        MerchantOnboardingDocumentDto: {
+            /** @example 018f6c5e-8b1b-7a6c-9c3f-4e5f6a7b8c9d */
+            id: string;
+            /** @example KTP_FRONT */
+            documentType: string;
+            /** @example ktp_depan.jpg */
+            sanitizedOriginalFilename: string;
+            /** @example image/jpeg */
+            mimeType: string;
+            /** @example 1048576 */
+            sizeBytes: number;
+            /** @example 2026-09-21T03:00:00.000Z */
+            createdAt: string;
+        };
+        MerchantOnboardingSubmissionDto: {
+            /** @example 018f6c5e-8b1b-7a6c-9c3f-4e5f6a7b8c9d */
+            id: string;
+            /** @example 018f6c5e-8b1b-7a6c-9c3f-4e5f6a7b8c9d */
+            merchantProfileId: string;
+            /** @example 1 */
+            revisionNumber: number;
+            /** @example null */
+            supersedesSubmissionId?: string | null;
+            /**
+             * @example PENDING
+             * @enum {string}
+             */
+            status: "PENDING" | "APPROVED" | "REJECTED";
+            /** @example John Doe */
+            fullName: string;
+            /**
+             * @description Masked NIK by default
+             * @example ************8901
+             */
+            maskedNik: string;
+            /** @example +6281234567890 */
+            accountPhoneSnapshot: string;
+            /** @example owner@example.com */
+            email?: string | null;
+            /** @example +6281987654321 */
+            alternateContact?: string | null;
+            /** @example Warung Torang Mantap */
+            proposedBusinessName: string;
+            /** @example KULINER */
+            businessCategory: string;
+            /** @example Menyediakan masakan nusantara */
+            businessDescription?: string | null;
+            /** @example Sulawesi Utara */
+            province: string;
+            /** @example Kota Manado */
+            regencyOrCity: string;
+            /** @example Wenang */
+            district: string;
+            /** @example Tikala Baru */
+            villageOrSubdistrict: string;
+            /** @example Jl. Sam Ratulangi No. 123 */
+            addressDetail: string;
+            /** @example 018f6c5e-8b1b-7a6c-9c3f-4e5f6a7b8c9d */
+            ktpDocumentId: string;
+            ktpDocument?: components["schemas"]["MerchantOnboardingDocumentDto"] | null;
+            /** @example 2026-09-21T03:00:00.000Z */
+            dataAccuracyAcceptedAt: string;
+            /** @example 2026-09-21T03:00:00.000Z */
+            merchantTermsAcceptedAt: string;
+            /** @example 1.0 */
+            merchantTermsVersion: string;
+            /** @example 2026-09-21T03:00:00.000Z */
+            privacyConsentAcceptedAt: string;
+            /** @example 1.0 */
+            privacyNoticeVersion: string;
+            /** @example 2026-09-21T03:00:00.000Z */
+            submittedAt: string;
+            /** @example null */
+            rejectionReason?: string | null;
+        };
         VerificationAuditLogItemDto: {
             /** @example 018f6c5e-8b1b-7a6c-9c3f-4e5f6a7b8c9d */
             id: string;
@@ -746,14 +958,41 @@ export interface components {
             createdAt: string;
             /** @example 2026-09-21T03:00:00.000Z */
             updatedAt: string;
+            /** @example 018f6c5e-8b1b-7a6c-9c3f-4e5f6a7b8c9d */
+            currentSubmissionId?: string | null;
+            currentSubmission?: components["schemas"]["MerchantOnboardingSubmissionDto"] | null;
             auditLogs: components["schemas"]["VerificationAuditLogItemDto"][];
         };
-        ApproveVerificationActionDto: {
+        RevealNikResponseDto: {
+            /**
+             * @description Full 16-digit unmasked NIK
+             * @example 7171012345678901
+             */
+            nik: string;
+        };
+        ApproveMerchantVerificationActionDto: {
+            /**
+             * @description Target submission UUID expected by admin to prevent stale approvals
+             * @example 018f6c5e-8b1b-7a6c-9c3f-4e5f6a7b8c9d
+             */
+            expectedSubmissionId?: string;
             /**
              * @description Optional administrative note or approval reason (max 1000 characters)
              * @example Identitas dan profil valid
              */
             reason?: string | null;
+        };
+        RejectMerchantVerificationActionDto: {
+            /**
+             * @description Target submission UUID expected by admin to prevent stale rejections
+             * @example 018f6c5e-8b1b-7a6c-9c3f-4e5f6a7b8c9d
+             */
+            expectedSubmissionId?: string;
+            /**
+             * @description Mandatory administrative justification reason (min 3, max 1000 characters)
+             * @example Foto KTP buram dan tidak terbaca
+             */
+            reason: string;
         };
         ReasonRequiredVerificationActionDto: {
             /**
@@ -813,6 +1052,122 @@ export interface components {
             /** @example 2026-09-21T03:00:00.000Z */
             updatedAt: string;
             auditLogs: components["schemas"]["VerificationAuditLogItemDto"][];
+        };
+        ApproveVerificationActionDto: {
+            /**
+             * @description Optional administrative note or approval reason (max 1000 characters)
+             * @example Identitas dan profil valid
+             */
+            reason?: string | null;
+        };
+        MerchantOnboardingDraftDto: {
+            /** @example 018f6c5e-8b1b-7a6c-9c3f-4e5f6a7b8c9d */
+            id: string;
+            /** @example 018f6c5e-8b1b-7a6c-9c3f-4e5f6a7b8c9d */
+            userId: string;
+            /** @example John Doe */
+            fullName?: string | null;
+            /** @example 7171012345678901 */
+            nik?: string | null;
+            /**
+             * @description Authoritative account phone number (read-only)
+             * @example +6281234567890
+             */
+            accountPhone: string;
+            /** @example owner@example.com */
+            email?: string | null;
+            /** @example +6281987654321 */
+            alternateContact?: string | null;
+            /** @example Warung Torang Mantap */
+            proposedBusinessName?: string | null;
+            /** @example KULINER */
+            businessCategory?: string | null;
+            /** @example Menyediakan masakan nusantara */
+            businessDescription?: string | null;
+            /** @example Sulawesi Utara */
+            province?: string | null;
+            /** @example Kota Manado */
+            regencyOrCity?: string | null;
+            /** @example Wenang */
+            district?: string | null;
+            /** @example Tikala Baru */
+            villageOrSubdistrict?: string | null;
+            /** @example Jl. Sam Ratulangi No. 123 */
+            addressDetail?: string | null;
+            /** @example 018f6c5e-8b1b-7a6c-9c3f-4e5f6a7b8c9d */
+            ktpDocumentId?: string | null;
+            ktpDocument?: components["schemas"]["MerchantOnboardingDocumentDto"] | null;
+            /** @example 2026-09-21T03:00:00.000Z */
+            createdAt: string;
+            /** @example 2026-09-21T03:00:00.000Z */
+            updatedAt: string;
+        };
+        MerchantOnboardingStatusResponseDto: {
+            /**
+             * @example NOT_STARTED
+             * @enum {string}
+             */
+            state: "NOT_STARTED" | "DRAFT" | "PENDING" | "REJECTED" | "APPROVED" | "SUSPENDED";
+            /** @example null */
+            merchantProfileId?: string | null;
+            /** @example +6281234567890 */
+            accountPhone: string;
+            draft?: components["schemas"]["MerchantOnboardingDraftDto"] | null;
+            currentSubmission?: components["schemas"]["MerchantOnboardingSubmissionDto"] | null;
+            /** @example null */
+            rejectionReason?: string | null;
+            /** @example null */
+            rejectionDate?: string | null;
+            /** @example null */
+            suspensionReason?: string | null;
+            /** @example null */
+            suspensionDate?: string | null;
+        };
+        SaveMerchantOnboardingDraftDto: {
+            /** @example John Doe */
+            fullName?: string | null;
+            /**
+             * @description Up to 16-digit numeric NIK
+             * @example 7171012345678901
+             */
+            nik?: string | null;
+            /** @example owner@example.com */
+            email?: string | null;
+            /** @example +6281987654321 */
+            alternateContact?: string | null;
+            /** @example Warung Torang Mantap */
+            proposedBusinessName?: string | null;
+            /** @example KULINER */
+            businessCategory?: string | null;
+            /** @example Menyediakan masakan khas nusantara */
+            businessDescription?: string | null;
+            /** @example Sulawesi Utara */
+            province?: string | null;
+            /** @example Kota Manado */
+            regencyOrCity?: string | null;
+            /** @example Wenang */
+            district?: string | null;
+            /** @example Tikala Baru */
+            villageOrSubdistrict?: string | null;
+            /** @example Jl. Sam Ratulangi No. 123 */
+            addressDetail?: string | null;
+        };
+        SubmitMerchantOnboardingDto: {
+            /**
+             * @description Confirmation that supplied data is true and accurate
+             * @example true
+             */
+            dataAccuracyAccepted: boolean;
+            /**
+             * @description Acceptance of Merchant Terms & Conditions
+             * @example true
+             */
+            merchantTermsAccepted: boolean;
+            /**
+             * @description Consent for personal data processing and privacy policy
+             * @example true
+             */
+            privacyConsentAccepted: boolean;
         };
     };
     responses: never;
@@ -1150,6 +1505,91 @@ export interface operations {
             };
         };
     };
+    AdminVerificationController_revealMerchantNik: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Merchant profile UUID */
+                profileId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RevealNikResponseDto"];
+                };
+            };
+            /** @description Unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Merchant profile not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminVerificationController_streamMerchantKtp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Merchant profile UUID */
+                profileId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Binary stream of KTP document */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Merchant profile or document not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     AdminVerificationController_approveMerchant: {
         parameters: {
             query?: never;
@@ -1162,7 +1602,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ApproveVerificationActionDto"];
+                "application/json": components["schemas"]["ApproveMerchantVerificationActionDto"];
             };
         };
         responses: {
@@ -1223,7 +1663,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ReasonRequiredVerificationActionDto"];
+                "application/json": components["schemas"]["RejectMerchantVerificationActionDto"];
             };
         };
         responses: {
@@ -1715,6 +2155,285 @@ export interface operations {
                 content?: never;
             };
             /** @description Invalid transition or idempotency conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MerchantOnboardingController_getStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchantOnboardingStatusResponseDto"];
+                };
+            };
+            /** @description Unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MerchantOnboardingController_getOrCreateDraft: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchantOnboardingDraftDto"];
+                };
+            };
+            /** @description Unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Profile already pending, approved, or suspended */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MerchantOnboardingController_saveDraft: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveMerchantOnboardingDraftDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchantOnboardingDraftDto"];
+                };
+            };
+            /** @description Validation error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Draft not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Cannot edit in current profile state */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MerchantOnboardingController_uploadKtp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /**
+                     * Format: binary
+                     * @description Front-side KTP image file (JPEG or PNG, max 5 MB)
+                     */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchantOnboardingDocumentDto"];
+                };
+            };
+            /** @description Invalid file, invalid magic bytes, or size exceeds 5MB */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Draft not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MerchantOnboardingController_getDocumentContent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Document UUID */
+                documentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Document image binary stream */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden (not document owner) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Document not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MerchantOnboardingController_submit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubmitMerchantOnboardingDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchantOnboardingStatusResponseDto"];
+                };
+            };
+            /** @description Incomplete draft or missing mandatory consents */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Conflict: profile already in review or active */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MerchantOnboardingController_repair: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchantOnboardingDraftDto"];
+                };
+            };
+            /** @description Unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Conflict: profile is not in REJECTED status */
             409: {
                 headers: {
                     [name: string]: unknown;

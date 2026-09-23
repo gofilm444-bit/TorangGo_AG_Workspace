@@ -17,6 +17,7 @@ import { AdminPermissionGuard } from '../auth/guards/admin-permission.guard.js';
 import { AppError, ConflictError, NotFoundError, BadRequestError } from '../common/errors/app-error.js';
 import { PostgresIdempotencyStore } from '../database/idempotency/postgres-idempotency.store.js';
 import { calculateFingerprint } from '../common/idempotency/idempotency.interceptor.js';
+import { LocalDocumentStorage } from '../storage/local-document-storage.js';
 
 const { Pool } = pg;
 
@@ -24,6 +25,7 @@ describe('Phase 2A2: Admin Verification Workflow Comprehensive Suite', () => {
   let pool: pg.Pool;
   let db: DrizzleDb;
   let transactionService: TransactionService;
+  let storage: LocalDocumentStorage;
   let service: AdminVerificationService;
   let controller: AdminVerificationController;
   let testAdminId: string;
@@ -38,7 +40,8 @@ describe('Phase 2A2: Admin Verification Workflow Comprehensive Suite', () => {
     pool = new Pool({ connectionString: connStr });
     db = drizzle(pool, { schema });
     transactionService = new TransactionService(db);
-    service = new AdminVerificationService(pool, transactionService);
+    storage = new LocalDocumentStorage();
+    service = new AdminVerificationService(pool, transactionService, storage);
     controller = new AdminVerificationController(service);
 
     // Create a seed admin account for audit log foreign keys

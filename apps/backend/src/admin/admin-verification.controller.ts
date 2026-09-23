@@ -6,6 +6,7 @@ import {
   Param,
   Query,
   Req,
+  Res,
   UseGuards,
   HttpCode,
   HttpStatus,
@@ -17,7 +18,7 @@ import {
   ApiBearerAuth,
   ApiParam,
 } from '@nestjs/swagger';
-import type { Request } from 'express';
+import type { Request, Response } from 'express';
 import { AuthSessionGuard } from '../auth/guards/auth-session.guard.js';
 import {
   AdminPermissionGuard,
@@ -29,11 +30,14 @@ import { AdminVerificationService } from './admin-verification.service.js';
 import { VerificationQueryDto } from './dto/verification-query.dto.js';
 import {
   ApproveVerificationActionDto,
+  ApproveMerchantVerificationActionDto,
   ReasonRequiredVerificationActionDto,
+  RejectMerchantVerificationActionDto,
 } from './dto/verification-action.dto.js';
 import {
   MerchantVerificationListResponseDto,
   MerchantVerificationDetailResponseDto,
+  RevealNikResponseDto,
 } from './dto/merchant-verification.dto.js';
 import {
   DriverVerificationListResponseDto,
@@ -83,6 +87,41 @@ export class AdminVerificationController {
     return this.verificationService.getMerchantDetail(profileId);
   }
 
+  @Get('merchants/:profileId/reveal-nik')
+  @HttpCode(HttpStatus.OK)
+  @RequirePermission(ADMIN_PERMISSIONS.ACCESS, ADMIN_PERMISSIONS.READ)
+  @ApiOperation({ summary: 'Reveal full unmasked NIK for merchant verification' })
+  @ApiParam({ name: 'profileId', description: 'Merchant profile UUID' })
+  @ApiResponse({ status: 200, type: RevealNikResponseDto })
+  @ApiResponse({ status: 401, description: 'Unauthenticated' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiResponse({ status: 404, description: 'Merchant profile not found' })
+  async revealMerchantNik(
+    @Param('profileId') profileId: string,
+  ): Promise<RevealNikResponseDto> {
+    return this.verificationService.revealMerchantNik(profileId);
+  }
+
+  @Get('merchants/:profileId/documents/ktp')
+  @HttpCode(HttpStatus.OK)
+  @RequirePermission(ADMIN_PERMISSIONS.ACCESS, ADMIN_PERMISSIONS.READ)
+  @ApiOperation({ summary: 'Stream merchant KTP document' })
+  @ApiParam({ name: 'profileId', description: 'Merchant profile UUID' })
+  @ApiResponse({ status: 200, description: 'Binary stream of KTP document' })
+  @ApiResponse({ status: 401, description: 'Unauthenticated' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiResponse({ status: 404, description: 'Merchant profile or document not found' })
+  async streamMerchantKtp(
+    @Param('profileId') profileId: string,
+    @Res() res: Response,
+  ): Promise<void> {
+    const doc = await this.verificationService.streamMerchantKtp(profileId);
+    res.setHeader('Content-Type', doc.mimeType);
+    res.setHeader('Content-Length', doc.sizeBytes);
+    res.setHeader('Cache-Control', 'private, no-cache, no-store, must-revalidate');
+    doc.stream.pipe(res);
+  }
+
   @Post('merchants/:profileId/approve')
   @HttpCode(HttpStatus.OK)
   @Idempotent()
@@ -97,12 +136,18 @@ export class AdminVerificationController {
   @ApiResponse({ status: 409, description: 'Invalid transition or idempotency conflict' })
   async approveMerchant(
     @Param('profileId') profileId: string,
-    @Body() body: ApproveVerificationActionDto,
+    @Body() body: ApproveMerchantVerificationActionDto,
     @Req() req: Request,
   ): Promise<MerchantVerificationDetailResponseDto> {
     const actorAdminId = req.user!.id!;
     const requestId = this.extractRequestId(req);
-    return this.verificationService.approveMerchant(profileId, actorAdminId, body.reason, requestId);
+    return this.verificationService.approveMerchant(
+      profileId,
+      actorAdminId,
+      body.reason,
+      requestId,
+      body.expectedSubmissionId,
+    );
   }
 
   @Post('merchants/:profileId/reject')
@@ -119,12 +164,18 @@ export class AdminVerificationController {
   @ApiResponse({ status: 409, description: 'Invalid transition or idempotency conflict' })
   async rejectMerchant(
     @Param('profileId') profileId: string,
-    @Body() body: ReasonRequiredVerificationActionDto,
+    @Body() body: RejectMerchantVerificationActionDto,
     @Req() req: Request,
   ): Promise<MerchantVerificationDetailResponseDto> {
     const actorAdminId = req.user!.id!;
     const requestId = this.extractRequestId(req);
-    return this.verificationService.rejectMerchant(profileId, actorAdminId, body.reason, requestId);
+    return this.verificationService.rejectMerchant(
+      profileId,
+      actorAdminId,
+      body.reason,
+      requestId,
+      body.expectedSubmissionId,
+    );
   }
 
   @Post('merchants/:profileId/suspend')

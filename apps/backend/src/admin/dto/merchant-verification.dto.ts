@@ -4,6 +4,7 @@ import {
   type ProfileVerificationStatus,
 } from '@platform/shared-types';
 import { VerificationAuditLogItemDto } from './verification-audit.dto.js';
+import { MerchantOnboardingSubmissionDto } from '../../merchant-onboarding/dto/merchant-onboarding.dto.js';
 
 export class MerchantVerificationItemDto {
   @ApiProperty({ example: '018f6c5e-8b1b-7a6c-9c3f-4e5f6a7b8c9d' })
@@ -46,6 +47,17 @@ export class MerchantVerificationListResponseDto {
 }
 
 export class MerchantVerificationDetailResponseDto extends MerchantVerificationItemDto {
+  @ApiPropertyOptional({ type: String, nullable: true, example: '018f6c5e-8b1b-7a6c-9c3f-4e5f6a7b8c9d' })
+  currentSubmissionId?: string | null;
+
+  @ApiPropertyOptional({ type: () => MerchantOnboardingSubmissionDto, nullable: true })
+  currentSubmission?: MerchantOnboardingSubmissionDto | null;
+
   @ApiProperty({ type: [VerificationAuditLogItemDto] })
   auditLogs!: VerificationAuditLogItemDto[];
+}
+
+export class RevealNikResponseDto {
+  @ApiProperty({ example: '7171012345678901', description: 'Full 16-digit unmasked NIK' })
+  nik!: string;
 }

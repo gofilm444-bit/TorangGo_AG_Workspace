@@ -46,3 +46,6 @@ Thumbs.db
 # Temporary / Cache
 *.tsbuildinfo
 .eslintcache
+
+# Private Document Storage (Development)
+.private_storage/
