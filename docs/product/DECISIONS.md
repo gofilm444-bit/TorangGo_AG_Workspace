@@ -1,6 +1,6 @@
 # TorangGo — Locked Decisions Register
 
-These 30 stable decision IDs record current product, architecture, and governance decisions. LOCKED decisions require explicit review to change. Existing decision status does not self-approve or lock this documentation rewrite, which remains subject to external audit.
+These 41 stable decision IDs record current product, architecture, and governance decisions. LOCKED decisions require explicit review to change. Existing decision status does not self-approve or lock this documentation rewrite, which remains subject to external audit.
 
 ## TG-DEC-001: Super-App Capability with Strict Single-Vertical MVP Scope
 
@@ -253,3 +253,91 @@ Master Prompt
 → next phase
 
 **Rationale / consequence:** Agents do not self-lock. This documentation task ends at verification and handoff; staging, committing, and pushing are not authorized. External audit/checkpoint must succeed before proceeding to the dedicated next-phase prompt.
+
+## TG-DEC-031: Phase 2C Business Setup Begins Only After Merchant APPROVED
+
+**Status:** LOCKED
+
+**Decision:** The operational Business and Outlet setup lifecycle in Phase 2C is accessible only after the partner identity and onboarding submission have reached the authoritative `APPROVED` state.
+
+**Rationale / consequence:** TorangGo strictly separates identity verification from commercial enterprise setup. Unverified, pending, rejected, or suspended merchant accounts cannot initialize or advance a Business Setup Draft.
+
+## TG-DEC-032: Separation of Phase 2B Onboarding Submissions and Phase 2C Business Domains
+
+**Status:** LOCKED
+
+**Decision:** Phase 2B onboarding submissions (`merchant_onboarding_submissions`) and Phase 2C operational business entities (`businesses`, `outlets`) are separate domains. Proposed business information and correspondence address collected during Phase 2B onboarding may prefill Phase 2C setup, but do not automatically become final operational records.
+
+**Rationale / consequence:** Onboarding submissions serve as immutable historical verification evidence of what the partner applied with. Operational businesses and fulfillment outlets represent mutable commercial reality that can evolve over time without rewriting historical verification snapshots.
+
+## TG-DEC-033: Mutable Business Setup Draft Before Operational Entity Creation
+
+**Status:** LOCKED
+
+**Decision:** Phase 2C employs a mutable setup draft with autosave and resume capabilities before final operational entities are created. Exactly one active setup draft per approved Merchant is permitted for MVP.
+
+**Rationale / consequence:** Prevents premature, incomplete, or orphaned operational records in production tables while a merchant is still completing the 4-step setup wizard. Operational entities are created only upon explicit completion.
+
+## TG-DEC-034: Atomic Creation of Business, Primary Outlet, and Operating Hours
+
+**Status:** LOCKED
+
+**Decision:** Completing the setup wizard must atomically create the Business, Primary Outlet, and default Operating Hours records, marking the setup draft completed within a single database transaction protected by idempotency and concurrency controls.
+
+**Rationale / consequence:** Eliminates partial state corruption where a Business might exist without an Outlet or operating schedule. Double-submit or concurrent completion attempts must never create duplicate Business or Outlet records.
+
+## TG-DEC-035: One-to-Many Business-to-Outlet Schema with Single Outlet MVP UX
+
+**Status:** LOCKED
+
+**Decision:** The underlying relational schema must model Business-to-Outlet as one-to-many (1:N), while Phase 2C product UX and operational APIs expose and enforce exactly one Primary Outlet per Business for the MVP.
+
+**Rationale / consequence:** Protects future platform evolution for multi-outlet expansion and franchises without requiring an expensive architectural schema migration, while keeping the current MVP operational and UX complexity strictly bounded.
+
+## TG-DEC-036: PostGIS Geospatial Persistence for Primary Outlet Location
+
+**Status:** LOCKED
+
+**Decision:** Primary Outlet physical location is persisted in PostgreSQL using PostGIS `geography(Point, 4326)`. Coordinates are provided as latitude/longitude to APIs and mapped to a PostGIS geography point.
+
+**Rationale / consequence:** Establishes a mathematically sound spatial foundation for distance calculations, geospatial indexing, and future customer discovery without locking the platform into a proprietary or paid third-party map provider at the documentation level.
+
+## TG-DEC-037: Canonical IANA Timezone per Outlet
+
+**Status:** LOCKED
+
+**Decision:** Every Outlet record stores a valid IANA timezone identifier (e.g., `Asia/Makassar`, `Asia/Jakarta`, `Asia/Jayapura`). The client/backend determines this from location context so merchants are not required to input raw technical strings.
+
+**Rationale / consequence:** Accurate scheduling of operating hours, order cutoffs, promotional timeframes, driver dispatch timing, and financial settlement requires explicit timezone awareness across Indonesia's three time zones.
+
+## TG-DEC-038: Post-Setup Editability Without Mutating Historical Onboarding Submissions
+
+**Status:** LOCKED
+
+**Decision:** After setup completion, Business and Outlet entities are mutable operational records that approved merchants may edit within authorized scope (e.g., name, category, description, contact, physical address, map coordinates, and operating hours). These operational updates must never mutate Phase 2B onboarding submission snapshots.
+
+**Rationale / consequence:** Merchants must be able to maintain their everyday business details, while historical onboarding verification records remain immutable evidentiary snapshots for platform traceability and historical verification integrity.
+
+## TG-DEC-039: Distinction Between Merchant Identity Approval and Operational Readiness
+
+**Status:** LOCKED
+
+**Decision:** A Merchant Profile status of `APPROVED` signifies that Merchant identity/onboarding verification is complete; it does NOT mean the merchant is operationally ready to accept customer orders. Operational readiness requires completion of Phase 2C (Business & Outlet), Phase 2D (Catalog & Menu), and future operational prerequisites.
+
+**Rationale / consequence:** Prevents premature exposure of stores in customer discovery and avoids overloading `merchant_profile.status` with multi-dimensional operational readiness states. Merchant mobile UI must not display "Toko Anda sudah aktif menerima pesanan" until full commercial readiness exists.
+
+## TG-DEC-040: Preservation of Business and Outlet Data Across Merchant Suspension
+
+**Status:** LOCKED
+
+**Decision:** When an Admin transitions a Merchant Profile from `APPROVED` to `SUSPENDED`, existing Business, Outlet, and Operating Hours data are preserved intact and never deleted or unlinked. Protected operational actions are blocked while suspended; administrative reactivation to `APPROVED` preserves and restores the existing setup without requiring re-setup, while operational authorization continues to depend on phase readiness rules.
+
+**Rationale / consequence:** Suspension is an administrative control-plane intervention, not a business liquidation. Preserving operational data prevents data loss and avoids forcing re-onboarding or re-setup upon administrative reinstatement, without bypassing operational readiness checks from subsequent phases.
+
+## TG-DEC-041: Strict Phase 2C Scope Firewall
+
+**Status:** LOCKED
+
+**Decision:** Phase 2C is strictly confined to Business, Primary Outlet, geospatial location point, and basic operating hours foundation. It strictly excludes Catalog/Menu, products, pricing, stock, cart, checkout, orders, payments, driver matching, delivery radiuses/zones, wallet, ledger, and multi-outlet management.
+
+**Rationale / consequence:** Enforces single-vertical MVP discipline and prevents scope creep from undermining incremental verification, quality gates, and architectural boundaries.

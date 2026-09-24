@@ -17,7 +17,7 @@ Courier, Mart, Ride, Pharmacy Delivery, and Home / On-Demand Services are **FUTU
 | TorangGo Customer | `apps/customer-mobile` | Customer authentication and, as roadmap phases deliver them, discovery, checkout, and order tracking. |
 | TorangGo Mitra | `apps/merchant-mobile` | Partner application container; Merchant onboarding and commerce operations are its MVP capability. |
 | TorangGo Driver | `apps/driver-mobile` | Dedicated Driver onboarding, availability, location, dispatch, and delivery experience as those phases are delivered. |
-| TorangGo Admin | `apps/admin-web` | Administrative web control plane; core authentication/RBAC and overview foundation are complete, verification workflow is next. |
+| TorangGo Admin | `apps/admin-web` | Administrative web control plane; core authentication/RBAC, verification workflow (Phase 2A2), and merchant review (Phase 2B) are complete. |
 
 **ONE APP CONTAINER != ONE BACKEND DOMAIN.** TorangGo Mitra may later host other partner capabilities, but their backend domains must remain appropriately separated. Service Provider capability/domain is **PARKED**, not implemented or active.
 
@@ -65,11 +65,43 @@ Backend checks determine effective access using authoritative account/session an
 
 ## Merchant, Business, and Outlet
 
-The operational model is **USER → MERCHANT PROFILE → BUSINESS → OUTLET**. The User is the human identity; Merchant Profile represents partner capability; Business represents the commercial enterprise; Outlet represents the physical fulfillment location.
+The operational domain model is **USER → MERCHANT PROFILE → BUSINESS → OUTLET**:
 
 The MVP UX and operational assumption is **1 Merchant → 1 Business → 1 Outlet**. This does not establish a permanent User-to-Merchant cardinality or prohibit a Business from having multiple Outlets in future evolution. Multi-outlet management is outside current MVP execution.
+```text
+USER
+  ↓
+MERCHANT PROFILE
+  ↓
+BUSINESS
+  ↓
+OUTLET
+```
 
-Driver Profile and Vehicle are separate concepts; their onboarding belongs to Phase 2H.
+- **User:** The human identity / account credentials.
+- **Merchant Profile:** The verified partner capability / identity state.
+- **Business:** The actual operational commercial enterprise.
+- **Outlet:** The physical operating and fulfillment location.
+
+
+Driver Profile and Vehicle remain separate concepts; their onboarding belongs to Phase 2H.
+
+### Domain Separation: Phase 2B vs Phase 2C
+
+Phase 2B delivered and locked the **Merchant Onboarding & Identity** lifecycle. Phase 2C delivers the **Operational Business & Primary Outlet Setup** foundation. These two domains are strictly separated:
+
+1. **Onboarding Submission vs. Operational Entities:** Proposed business information and correspondence address collected in Phase 2B onboarding submissions serve as immutable historical verification evidence. They may prefill Phase 2C setup fields for convenience, but do not automatically create or become the final Business and Outlet records.
+2. **Setup Draft Lifecycle:** Phase 2C introduces a mutable Business Setup Draft (with autosave/resume) that must be completed before operational records exist. Exactly one active setup draft per approved Merchant is permitted for MVP.
+3. **Atomic Operational Creation:** Completing the setup wizard atomically validates the draft and creates the Business, Primary Outlet, and default Operating Hours records within a single database transaction protected by idempotency and concurrency controls.
+4. **Post-Setup Mutability:** After setup completion, Business and Outlet entities are mutable operational records that approved merchants may edit within authorized scope (e.g., name, category, description, contact, physical address, map coordinates, and operating hours). These edits never mutate Phase 2B onboarding submission snapshots.
+5. **Geospatial & Timezone Foundation:** Primary Outlet physical location is persisted in PostgreSQL using PostGIS `geography(Point, 4326)`. Outlets explicitly store an IANA timezone identifier (e.g., `Asia/Makassar`, `Asia/Jakarta`, `Asia/Jayapura`) to ensure correct operational scheduling.
+6. **Basic Operating Hours:** Phase 2C establishes basic Monday–Sunday operating hours with one open/closed interval per open day. Split shifts, holiday schedules, and temporary closures are deferred to future phases.
+7. **Identity Approval != Operational Readiness:** A Merchant Profile status of `APPROVED` in Phase 2B confirms that Merchant identity/onboarding verification is complete, but does NOT mean the merchant is ready to accept orders. Full operational readiness additionally requires Phase 2C (Business & Outlet setup), Phase 2D (Catalog & Menu setup), and subsequent operational milestones.
+8. **Administrative Suspension Preservation:** Transitioning a Merchant Profile from `APPROVED` to `SUSPENDED` preserves existing Business, Outlet, and Operating Hours data intact. Reactivation to `APPROVED` restores the existing setup without requiring re-setup, while operational authorization remains governed by phase readiness rules.
+9. **Schema Extensibility:** The underlying database schema models Business-to-Outlet as one-to-many (1:N), while Phase 2C MVP UX and operational workflows strictly expose and manage one Primary Outlet per Business.
+
+Driver Profile and Vehicle remain separate concepts; their onboarding belongs to Phase 2H.
+
 
 ## Order and Financial Principles
 
@@ -127,6 +159,14 @@ Follow the full governance workflow in TG-DEC-030. Agents implement and verify a
 | Phase 2 — Core Commerce & Delivery | IN PROGRESS |
 | Phase 2A1 — Admin Core Foundation & RBAC Bootstrap | COMPLETE / LOCKED |
 | Office Admin Security & Runtime Verification | COMPLETE / LOCKED |
-| Phase 2A2 — Admin Verification Workflow | NEXT / NOT STARTED |
+| Phase 2A2 — Admin Verification Workflow | COMPLETE / LOCKED |
+| Phase 2B — Merchant Onboarding | COMPLETE / LOCKED |
+| Phase 2C — Merchant Business + Single Outlet Foundation | NEXT / NOT STARTED |
 
-The Phase 2A1 functional checkpoint is `ebb3838888b11ede5a4a150d5a590bbabc05a26a`. Git history normalization did not introduce a new product phase. Current HEAD and next operational actions are recorded in [HANDOFF.md](HANDOFF.md).
+Phase checkpoints:
+- Phase 2A1 functional checkpoint: `ebb3838888b11ede5a4a150d5a590bbabc05a26a`
+- Phase 2A2 verification checkpoint: `f54f20550a84d1ddced958f84a8b5be35eb5082e`
+- Phase 2B merchant onboarding checkpoint: `63a1565140a35c7b9cb1bc48d09f0c83cebeaea3` (CI Run #10: SUCCESS)
+- Phase 2C Concept Anchor v1.0 is **LOCKED**; implementation is **NOT STARTED**.
+
+Current repository HEAD and operational handoff details are recorded in [HANDOFF.md](HANDOFF.md).

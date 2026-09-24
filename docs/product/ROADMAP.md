@@ -36,7 +36,7 @@ flowchart TD
     A1["2A1 Admin Core Foundation & RBAC Bootstrap"]
     A2["2A2 Admin Verification Workflow"]
     B["2B Merchant Onboarding"]
-    C["2C Business + Single Outlet"]
+    C["2C Business + Single Outlet Foundation"]
     D["2D Catalog"]
     E["2E Customer Discovery + Address"]
     F["2F Cart + Food Delivery Pricing / Checkout Quote"]
@@ -79,19 +79,54 @@ Delivered the granular backend permission foundation, SUPER_ADMIN bootstrap, pro
 
 #### 2A2 — Admin Verification Workflow
 
-**NEXT / NOT STARTED.** Review Merchant/Driver submissions and support controlled status changes with authorization and audit requirements.
+**COMPLETE / LOCKED.** Verification checkpoint: `f54f20550a84d1ddced958f84a8b5be35eb5082e`.
 
-Exact states, transitions, mutation endpoints, and onboarding document schemas must be defined in the dedicated Phase 2A2 Master Prompt after the documentation checkpoint. This task implements none of them.
+Delivered the authoritative backend verification workflows and dedicated Admin Web control interface for Merchant and Driver profile management:
+
+- **Canonical State Machine:** Strict status transitions across `PENDING`, `APPROVED`, `REJECTED`, and `SUSPENDED` enforced for both Merchant and Driver queues.
+- **Reason & Audit Enforcement:** Mandatory validation of transition reasons and immutable append-only audit trail logging (`profile_verification_audit_logs`) capturing actor, timestamps, from/to states, reason, and request correlation IDs.
+- **Concurrency & Atomicity:** Row-level locking (`FOR UPDATE`) preventing race conditions during concurrent admin reviews; atomic rollback on audit failure; database-backed idempotency protection on mutations.
+- **RBAC Enforcement:** Granular permissions (`admin:access + admin:read` for inspection, `admin:access + admin:write` for approve/reject, `admin:access + admin:write + admin:ops` for suspend/reactivate) strictly validated at backend guards.
+- **Admin Web Experience:** Real-time queue filtering, search, pagination, detailed profile inspection, audit history timeline, and enforcement of the terminal rejected state for admin mutations.
 
 ### 2B — Merchant Onboarding
 
-Planned scope may include Merchant identity/profile, owner/contact information, required verification documents, agreement/consent where applicable, submission/review status, and review feedback.
+**COMPLETE / LOCKED.** Checkpoint: `63a1565140a35c7b9cb1bc48d09f0c83cebeaea3` (GitHub Actions CI Run #10: SUCCESS).
 
 **Mobile milestone:** TorangGo Mitra begins substantial real business functionality through onboarding.
+Delivered the complete partner onboarding lifecycle from TorangGo Mitra application through Admin verification:
 
-### 2C — Business + Single Outlet
+- **Draft & Autosave Lifecycle:** Authenticated partners create, autosave, and resume a single active onboarding draft across sessions.
+- **5-Step Onboarding Wizard:** Structured progression capturing Owner Information (Full Name, NIK, synced Account Phone, Email), Proposed Business Information, Correspondence Address, Private Front-Side KTP Document upload (hardened with magic byte MIME sniffing and path traversal prevention), and mandatory declaration/data-accuracy consents.
+- **Immutable Submission Snapshots:** First submit atomically creates `merchant_profiles` + immutable `merchant_onboarding_submissions` (revision #1, `PENDING`) and purges the draft.
+- **Rejection & Revision Lifecycle:** Rejected applications can be repaired via an explicit repair endpoint that clones the previous submission into a new mutable draft. Resubmission creates an immutable revision #2 for subsequent Admin review.
+- **Stale Admin Review Guard:** Enforces optimistic concurrency via `expectedSubmissionId`; returns 409 Conflict if an admin attempts to decide on a submission that the merchant has already revised.
+- **Admin Review Capabilities:** Admin verification page features default NIK masking with authorized reveal, private streaming of KTP documents with authorization boundaries, and atomic approve/reject decisions.
+- **Product Boundaries:** Onboarding establishes partner capability/identity only; proposed business data is not the final operational Business; correspondence address is not the Outlet address; KTP documents are private; `APPROVED` status does not grant order readiness; Business/Outlet creation is deferred to Phase 2C.
 
-Establish the commercial Business and physical Outlet. The MVP operational assumption is 1 Merchant → 1 Business → 1 Outlet, with outlet location, hours, and operational availability addressed in dedicated design.
+**Mobile milestone:** TorangGo Mitra delivered its comprehensive 6-state onboarding gate (`NOT_STARTED`, `DRAFT`, `PENDING`, `APPROVED`, `REJECTED`, `SUSPENDED`) and interactive 5-step form wizard with local autosave indicators.
+
+### 2C — Business + Single Outlet Foundation
+
+**NEXT / NOT STARTED.** Concept Anchor v1.0 is **LOCKED**; implementation is **NOT STARTED**.
+
+Phase 2C establishes the operational commercial Business and physical primary Outlet for verified merchants.
+
+- **Precondition:** Begins only after partner identity reaches `APPROVED` state.
+- **Domain Structure:** Follows `USER → MERCHANT PROFILE → BUSINESS → OUTLET`. Schema models Business-to-Outlet as one-to-many (1:N), while MVP UX strictly manages one Primary Outlet per Business.
+- **Setup Draft Lifecycle:** Introduces a mutable Business Setup Draft with autosave and resume capabilities before operational records are created.
+- **4-Step Setup Wizard:**
+  - **Step 1 — Informasi Usaha:** Business name, category, and description (prefilled where appropriate from approved 2B submission, fully editable).
+  - **Step 2 — Outlet Utama:** Primary Outlet name, contact phone, and physical fulfillment address (province, regency/city, district, village/subdistrict, detailed address, optional postal code; strictly separate from 2B correspondence address).
+  - **Step 3 — Lokasi & Jam Operasional:** Map pin / geographic coordinate selection persisted via PostGIS `geography(Point, 4326)`, canonical IANA timezone assignment (e.g., `Asia/Makassar`), and basic Monday–Sunday operating hours (one opening interval per open day).
+  - **Step 4 — Review & Complete:** Full operational review followed by atomic creation of Business, Primary Outlet, and Operating Hours within a single database transaction protected by idempotency and concurrency controls.
+- **Operational Mutability:** Business and Outlet entities are mutable operational records after setup. Edits never alter historical Phase 2B onboarding submissions.
+- **Suspension Preservation:** Admin suspension preserves existing Business, Outlet, and Operating Hours data without deletion or unlinking; reactivated merchants retain their operational setup.
+- **Mobile Gate Progression:** Extends TorangGo Mitra gate to distinguish between setup not started, setup draft in progress, and operational setup completed. UI explicitly avoids claiming "Toko Anda sudah aktif menerima pesanan" since Catalog and Order capabilities are not yet active.
+- **Operational Readiness Distinction:** `merchant_profile.status = APPROVED` represents identity approval, distinct from full operational readiness (which additionally requires Phase 2C setup, Phase 2D catalog/menu, and subsequent milestones).
+- **Admin Visibility:** Extends Admin merchant detail with read-only operational visibility; excludes admin editing of operational businesses.
+- **Strict Scope Firewall:** Excludes Catalog/Menu, products, pricing, stock, cart, checkout, orders, payments, driver matching, delivery radiuses/zones, wallet, ledger, and multi-outlet management.
+
 
 ### 2D — Catalog
 
