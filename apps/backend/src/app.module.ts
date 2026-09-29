@@ -6,6 +6,7 @@ import { AuthModule } from './auth/auth.module.js';
 import { AdminModule } from './admin/admin.module.js';
 import { StorageModule } from './storage/storage.module.js';
 import { MerchantOnboardingModule } from './merchant-onboarding/merchant-onboarding.module.js';
+import { MerchantBusinessModule } from './merchant-business/merchant-business.module.js';
 import { StructuredLogger } from './common/logging/logger.service.js';
 import {
   IDEMPOTENCY_STORE_TOKEN,
@@ -32,6 +33,7 @@ const config = loadAppConfig();
     AuthModule,
     AdminModule,
     MerchantOnboardingModule,
+    MerchantBusinessModule,
   ],
   providers: [
     StructuredLogger,
@@ -55,4 +57,4 @@ const config = loadAppConfig();
     IdempotencyInterceptor,
   ],
 })
-export class AppModule {}
+export class AppModule { }

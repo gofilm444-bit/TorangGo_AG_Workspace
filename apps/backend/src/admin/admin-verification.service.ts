@@ -19,6 +19,7 @@ import type {
   MerchantVerificationItemDto,
   MerchantVerificationListResponseDto,
   MerchantVerificationDetailResponseDto,
+  AdminMerchantOperationalSummaryDto,
 } from './dto/merchant-verification.dto.js';
 import type {
   DriverVerificationItemDto,
@@ -90,7 +91,7 @@ export class AdminVerificationService {
     private readonly transactionService: TransactionService,
     @Inject(PRIVATE_DOCUMENT_STORAGE)
     private readonly storage: PrivateDocumentStorage,
-  ) {}
+  ) { }
 
   /**
    * List Merchant verification items with filtering, search, and pagination.
@@ -259,13 +260,13 @@ export class AdminVerificationService {
           ktpDocumentId: sub.ktp_document_id,
           ktpDocument: sub.sanitized_original_filename
             ? {
-                id: sub.ktp_document_id,
-                documentType: 'KTP_FRONT',
-                sanitizedOriginalFilename: sub.sanitized_original_filename,
-                mimeType: sub.mime_type!,
-                sizeBytes: Number(sub.size_bytes!),
-                createdAt: new Date(sub.doc_created_at!).toISOString(),
-              }
+              id: sub.ktp_document_id,
+              documentType: 'KTP_FRONT',
+              sanitizedOriginalFilename: sub.sanitized_original_filename,
+              mimeType: sub.mime_type!,
+              sizeBytes: Number(sub.size_bytes!),
+              createdAt: new Date(sub.doc_created_at!).toISOString(),
+            }
             : null,
           dataAccuracyAcceptedAt: new Date(sub.data_accuracy_accepted_at).toISOString(),
           merchantTermsAcceptedAt: new Date(sub.merchant_terms_accepted_at).toISOString(),
@@ -279,6 +280,138 @@ export class AdminVerificationService {
 
     const auditLogs = await this.getAuditLogs('MERCHANT', profileId);
 
+    let operationalSummary: AdminMerchantOperationalSummaryDto | null = null;
+    const busRes = await this.pool.query<{
+      id: string;
+      merchant_profile_id: string;
+      name: string;
+      category_code: string;
+      description: string | null;
+      source_onboarding_submission_id: string | null;
+      created_at: Date;
+      updated_at: Date;
+    }>(
+      `SELECT * FROM businesses WHERE merchant_profile_id = $1;`,
+      [profileId],
+    );
+    const busRow = busRes.rows[0];
+
+    if (busRow) {
+      const outletRes = await this.pool.query<{
+        id: string;
+        business_id: string;
+        name: string;
+        contact_phone: string;
+        province: string;
+        regency_or_city: string;
+        district: string;
+        village_or_subdistrict: string;
+        address_detail: string;
+        postal_code: string | null;
+        latitude: number | string;
+        longitude: number | string;
+        timezone: string;
+        is_primary: boolean;
+        created_at: Date;
+        updated_at: Date;
+      }>(
+        `SELECT
+           id, business_id, name, contact_phone,
+           province, regency_or_city, district, village_or_subdistrict,
+           address_detail, postal_code,
+           ST_Y(location::geometry) as latitude,
+           ST_X(location::geometry) as longitude,
+           timezone, is_primary, created_at, updated_at
+         FROM outlets
+         WHERE business_id = $1 AND is_primary = true;`,
+        [busRow.id],
+      );
+      const outletRow = outletRes.rows[0];
+
+      let operatingHours: any[] = [];
+      if (outletRow) {
+        const hoursRes = await this.pool.query<{
+          id: string;
+          outlet_id: string;
+          day_of_week: number;
+          is_closed: boolean;
+          open_time: string | null;
+          close_time: string | null;
+          created_at: Date;
+        }>(
+          `SELECT * FROM outlet_operating_hours
+           WHERE outlet_id = $1
+           ORDER BY day_of_week ASC;`,
+          [outletRow.id],
+        );
+        operatingHours = hoursRes.rows.map((h) => ({
+          id: h.id,
+          outletId: h.outlet_id,
+          dayOfWeek: h.day_of_week,
+          isClosed: h.is_closed,
+          openTime: h.open_time ? h.open_time.slice(0, 5) : null,
+          closeTime: h.close_time ? h.close_time.slice(0, 5) : null,
+          createdAt: h.created_at.toISOString(),
+        }));
+      }
+
+      operationalSummary = {
+        setupState: 'COMPLETE',
+        business: {
+          id: busRow.id,
+          merchantProfileId: busRow.merchant_profile_id,
+          name: busRow.name,
+          categoryCode: busRow.category_code,
+          description: busRow.description,
+          sourceOnboardingSubmissionId: busRow.source_onboarding_submission_id,
+          createdAt: busRow.created_at.toISOString(),
+          updatedAt: busRow.updated_at.toISOString(),
+        },
+        primaryOutlet: outletRow
+          ? {
+              id: outletRow.id,
+              businessId: outletRow.business_id,
+              name: outletRow.name,
+              contactPhone: outletRow.contact_phone,
+              province: outletRow.province,
+              regencyOrCity: outletRow.regency_or_city,
+              district: outletRow.district,
+              villageOrSubdistrict: outletRow.village_or_subdistrict,
+              addressDetail: outletRow.address_detail,
+              postalCode: outletRow.postal_code,
+              latitude: Number(outletRow.latitude),
+              longitude: Number(outletRow.longitude),
+              timezone: outletRow.timezone,
+              isPrimary: outletRow.is_primary,
+              createdAt: outletRow.created_at.toISOString(),
+              updatedAt: outletRow.updated_at.toISOString(),
+            }
+          : null,
+        operatingHours,
+      };
+    } else {
+      const draftRes = await this.pool.query<{ id: string }>(
+        `SELECT id FROM merchant_business_setup_drafts
+         WHERE merchant_profile_id = $1 AND completed_at IS NULL;`,
+        [profileId],
+      );
+      if (draftRes.rows[0]) {
+        operationalSummary = {
+          setupState: 'DRAFT',
+          business: null,
+          primaryOutlet: null,
+          operatingHours: null,
+        };
+      } else {
+        operationalSummary = {
+          setupState: 'NOT_STARTED',
+          business: null,
+          primaryOutlet: null,
+          operatingHours: null,
+        };
+      }
+    }
+
     return {
       profileId: row.id,
       userId: row.user_id,
@@ -291,6 +424,7 @@ export class AdminVerificationService {
       createdAt: row.created_at.toISOString(),
       updatedAt: row.updated_at.toISOString(),
       auditLogs,
+      operationalSummary,
     };
   }
 

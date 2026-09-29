@@ -121,6 +121,10 @@ describe('Phase 1C Database Foundation & Persistence Suite', () => {
             'merchant_onboarding_documents',
             'merchant_onboarding_drafts',
             'merchant_onboarding_submissions',
+            'merchant_business_setup_drafts',
+            'businesses',
+            'outlets',
+            'outlet_operating_hours',
           ];
           for (const tbl of expectedTables) {
             assert.ok(publicTableNames.includes(tbl), `${tbl} table must exist in clean database`);

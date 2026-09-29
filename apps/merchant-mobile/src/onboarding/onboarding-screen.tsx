@@ -22,16 +22,11 @@ import {
 } from '@platform/mobile-ui';
 import { useOnboarding } from './onboarding-context';
 import { useMerchantAuth } from '../auth/auth-context';
-import { MERCHANT_TERMS_VERSION, PRIVACY_NOTICE_VERSION } from '@platform/shared-types';
-
-const CATEGORIES = [
-  'KULINER',
-  'TOKO_KELONTONG',
-  'FASHION',
-  'ELEKTRONIK',
-  'JASA',
-  'LAINNYA',
-];
+import {
+  MERCHANT_TERMS_VERSION,
+  PRIVACY_NOTICE_VERSION,
+  MERCHANT_BUSINESS_CATEGORIES,
+} from '@platform/shared-types';
 
 export function MerchantOnboardingScreen() {
   const {
@@ -348,23 +343,35 @@ export function MerchantOnboardingScreen() {
                 Kategori Usaha*
               </AppText>
               <View style={styles.chipContainer}>
-                {CATEGORIES.map((cat) => (
+                {MERCHANT_BUSINESS_CATEGORIES.map((cat) => (
                   <TouchableOpacity
-                    key={cat}
+                    key={cat.code}
                     style={[
                       styles.chip,
-                      draft?.businessCategory === cat ? styles.chipActive : styles.chipInactive,
+                      draft?.businessCategory === cat.code ? styles.chipActive : styles.chipInactive,
                     ]}
-                    onPress={() => updateDraftField({ businessCategory: cat })}
+                    onPress={() => updateDraftField({ businessCategory: cat.code })}
                   >
                     <AppText
                       variant="bodySmall"
-                      color={draft?.businessCategory === cat ? 'primary' : 'textSecondary'}
+                      color={draft?.businessCategory === cat.code ? 'primary' : 'textSecondary'}
                     >
-                      {cat.replace('_', ' ')}
+                      {cat.label}
                     </AppText>
                   </TouchableOpacity>
                 ))}
+                {!MERCHANT_BUSINESS_CATEGORIES.some((c) => c.code === draft?.businessCategory) &&
+                draft?.businessCategory ? (
+                  <TouchableOpacity
+                    key={draft.businessCategory}
+                    style={[styles.chip, styles.chipActive]}
+                    onPress={() => updateDraftField({ businessCategory: draft.businessCategory })}
+                  >
+                    <AppText variant="bodySmall" color="primary">
+                      {draft.businessCategory}
+                    </AppText>
+                  </TouchableOpacity>
+                ) : null}
               </View>
               {stepErrors.businessCategory && (
                 <AppText variant="caption" color="error" style={styles.errorText}>

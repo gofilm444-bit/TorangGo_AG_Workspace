@@ -104,6 +104,22 @@ export type ApproveMerchantVerificationActionDto = components['schemas']['Approv
 export type RejectMerchantVerificationActionDto = components['schemas']['RejectMerchantVerificationActionDto'];
 export type RevealNikResponseDto = components['schemas']['RevealNikResponseDto'];
 
+export type BusinessDto = components['schemas']['BusinessDto'];
+export type OutletDto = components['schemas']['OutletDto'];
+export type OutletOperatingHoursDto = components['schemas']['OutletOperatingHoursDto'];
+export type OperatingHourItemDto = components['schemas']['OperatingHourItemDto'];
+export type BusinessSetupDraftPayloadDto = components['schemas']['BusinessSetupDraftPayloadDto'];
+export type OutletSetupDraftPayloadDto = components['schemas']['OutletSetupDraftPayloadDto'];
+export type BusinessSetupDraftDto = components['schemas']['BusinessSetupDraftDto'];
+export type BusinessSetupStatusResponseDto = components['schemas']['BusinessSetupStatusResponseDto'];
+export type SaveBusinessSetupDraftDto = components['schemas']['SaveBusinessSetupDraftDto'];
+export type CompleteBusinessSetupDto = components['schemas']['CompleteBusinessSetupDto'];
+export type BusinessSetupCompletionResponseDto = components['schemas']['BusinessSetupCompletionResponseDto'];
+export type UpdateBusinessDto = components['schemas']['UpdateBusinessDto'];
+export type UpdatePrimaryOutletDto = components['schemas']['UpdatePrimaryOutletDto'];
+export type PrimaryOutletDetailResponseDto = components['schemas']['PrimaryOutletDetailResponseDto'];
+export type AdminMerchantOperationalSummaryDto = components['schemas']['AdminMerchantOperationalSummaryDto'];
+
 export interface VerificationQueryOptions {
   status?: 'PENDING' | 'APPROVED' | 'REJECTED' | 'SUSPENDED';
   q?: string;

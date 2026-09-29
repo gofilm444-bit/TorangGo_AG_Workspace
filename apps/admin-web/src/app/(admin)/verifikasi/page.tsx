@@ -895,6 +895,145 @@ export default function VerifikasiPage() {
                   </div>
                 )}
 
+                {/* Phase 2C Read-Only Operational Summary */}
+                {activeTab === 'MERCHANT' && (
+                  <div
+                    style={{
+                      padding: '16px',
+                      borderRadius: 'var(--radius-md)',
+                      backgroundColor: 'var(--color-bg-canvas)',
+                      border: '1px solid var(--color-border)',
+                      marginBottom: '24px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                      <div style={{ fontSize: '0.875rem', fontWeight: 600 }}>
+                        Profil Usaha & Outlet (Fase 2C)
+                      </div>
+                      <div>
+                        {(() => {
+                          const state = merchantDetail?.operationalSummary?.setupState || 'NOT_STARTED';
+                          if (state === 'COMPLETE') {
+                            return <span className="admin-badge admin-badge-success">COMPLETE</span>;
+                          }
+                          if (state === 'DRAFT') {
+                            return <span className="admin-badge admin-badge-warning">DRAFT</span>;
+                          }
+                          return <span className="admin-badge admin-badge-neutral">NOT STARTED</span>;
+                        })()}
+                      </div>
+                    </div>
+
+                    {merchantDetail?.operationalSummary?.setupState === 'COMPLETE' && merchantDetail.operationalSummary.business ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        {/* Business Details */}
+                        <div style={{ borderBottom: '1px solid var(--color-border)', paddingBottom: '12px' }}>
+                          <div style={{ fontWeight: 600, fontSize: '0.8125rem', color: 'var(--color-text-secondary)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                            Informasi Usaha
+                          </div>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '0.875rem' }}>
+                            <div>
+                              <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.75rem' }}>Nama Usaha</div>
+                              <strong>{merchantDetail.operationalSummary.business.name}</strong>
+                            </div>
+                            <div>
+                              <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.75rem' }}>Kategori Usaha</div>
+                              <span className="admin-badge admin-badge-info">{merchantDetail.operationalSummary.business.categoryCode}</span>
+                            </div>
+                            {merchantDetail.operationalSummary.business.description && (
+                              <div style={{ gridColumn: 'span 2' }}>
+                                <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.75rem' }}>Deskripsi</div>
+                                <div>{typeof merchantDetail.operationalSummary.business.description === 'string' ? merchantDetail.operationalSummary.business.description : ''}</div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Primary Outlet Details */}
+                        {merchantDetail.operationalSummary.primaryOutlet && (
+                          <div style={{ borderBottom: '1px solid var(--color-border)', paddingBottom: '12px' }}>
+                            <div style={{ fontWeight: 600, fontSize: '0.8125rem', color: 'var(--color-text-secondary)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                              Outlet Utama
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '0.875rem' }}>
+                              <div>
+                                <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.75rem' }}>Nama Outlet</div>
+                                <strong>{merchantDetail.operationalSummary.primaryOutlet.name}</strong>
+                              </div>
+                              <div>
+                                <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.75rem' }}>Kontak Telepon</div>
+                                <span>{merchantDetail.operationalSummary.primaryOutlet.contactPhone}</span>
+                              </div>
+                              <div style={{ gridColumn: 'span 2' }}>
+                                <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.75rem' }}>Alamat Fisik</div>
+                                <div>{merchantDetail.operationalSummary.primaryOutlet.addressDetail}</div>
+                                <div style={{ color: 'var(--color-text-muted)', marginTop: '4px' }}>
+                                  Kel. {merchantDetail.operationalSummary.primaryOutlet.villageOrSubdistrict}, Kec. {merchantDetail.operationalSummary.primaryOutlet.district}, {merchantDetail.operationalSummary.primaryOutlet.regencyOrCity}, {merchantDetail.operationalSummary.primaryOutlet.province}
+                                  {typeof merchantDetail.operationalSummary.primaryOutlet.postalCode === 'string' ? ` (Kode Pos: ${merchantDetail.operationalSummary.primaryOutlet.postalCode})` : ''}
+                                </div>
+                              </div>
+                              <div>
+                                <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.75rem' }}>Koordinat Lokasi</div>
+                                <code>{merchantDetail.operationalSummary.primaryOutlet.latitude}, {merchantDetail.operationalSummary.primaryOutlet.longitude}</code>
+                              </div>
+                              <div>
+                                <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.75rem' }}>Zona Waktu</div>
+                                <span className="admin-badge admin-badge-neutral">{merchantDetail.operationalSummary.primaryOutlet.timezone}</span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Operating Hours Table */}
+                        {merchantDetail.operationalSummary.operatingHours && merchantDetail.operationalSummary.operatingHours.length > 0 && (
+                          <div>
+                            <div style={{ fontWeight: 600, fontSize: '0.8125rem', color: 'var(--color-text-secondary)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                              Jadwal Operasional (7 Hari)
+                            </div>
+                            <div style={{ overflowX: 'auto' }}>
+                              <table style={{ width: '100%', fontSize: '0.8125rem', borderCollapse: 'collapse' }}>
+                                <thead>
+                                  <tr style={{ borderBottom: '1px solid var(--color-border)', textAlign: 'left' }}>
+                                    <th style={{ padding: '6px 8px' }}>Hari</th>
+                                    <th style={{ padding: '6px 8px' }}>Status</th>
+                                    <th style={{ padding: '6px 8px' }}>Jam Buka</th>
+                                    <th style={{ padding: '6px 8px' }}>Jam Tutup</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {merchantDetail.operationalSummary.operatingHours.map((oh) => {
+                                    const dayNames = ['', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+                                    return (
+                                      <tr key={oh.dayOfWeek} style={{ borderBottom: '1px solid var(--color-border-subtle, #eee)' }}>
+                                        <td style={{ padding: '6px 8px', fontWeight: 500 }}>{dayNames[oh.dayOfWeek] || `Hari ${oh.dayOfWeek}`}</td>
+                                        <td style={{ padding: '6px 8px' }}>
+                                          {oh.isClosed ? (
+                                            <span className="admin-badge admin-badge-danger" style={{ fontSize: '0.75rem' }}>TUTUP</span>
+                                          ) : (
+                                            <span className="admin-badge admin-badge-success" style={{ fontSize: '0.75rem' }}>BUKA</span>
+                                          )}
+                                        </td>
+                                        <td style={{ padding: '6px 8px' }}>{oh.isClosed ? '-' : typeof oh.openTime === 'string' ? oh.openTime : '-'}</td>
+                                        <td style={{ padding: '6px 8px' }}>{oh.isClosed ? '-' : typeof oh.closeTime === 'string' ? oh.closeTime : '-'}</td>
+                                      </tr>
+                                    );
+                                  })}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)' }}>
+                        {merchantDetail?.operationalSummary?.setupState === 'DRAFT'
+                          ? 'Mitra sedang dalam proses pengisian draft setup usaha & outlet utama.'
+                          : 'Mitra belum memulai proses setup profil usaha & outlet.'}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Controlled Status Actions */}
                 <div
                   style={{

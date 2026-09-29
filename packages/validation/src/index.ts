@@ -2,6 +2,8 @@ import { z } from 'zod';
 
 export * from './primitives.schema.js';
 export * from './envelope.schema.js';
+export * from './business.schema.js';
+
 
 export const healthResponseSchema = z.object({
   status: z.literal('ok'),

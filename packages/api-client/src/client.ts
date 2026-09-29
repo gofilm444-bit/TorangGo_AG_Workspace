@@ -19,6 +19,15 @@ import type {
   SaveMerchantOnboardingDraftDto,
   MerchantOnboardingDocumentDto,
   SubmitMerchantOnboardingDto,
+  BusinessSetupStatusResponseDto,
+  BusinessSetupDraftDto,
+  SaveBusinessSetupDraftDto,
+  CompleteBusinessSetupDto,
+  BusinessSetupCompletionResponseDto,
+  BusinessDto,
+  UpdateBusinessDto,
+  UpdatePrimaryOutletDto,
+  PrimaryOutletDetailResponseDto,
 } from './types.js';
 
 
@@ -630,6 +639,127 @@ export class ApiClient {
     const res = await this.request<MerchantOnboardingDraftDto>(
       '/api/v1/merchant/onboarding/repair',
       { method: 'POST' },
+      options,
+    );
+    return res.data;
+  }
+
+  // ===========================================================================
+  // Phase 2C — Merchant Business & Single Outlet Foundation Methods
+  // ===========================================================================
+
+  /**
+   * Get current business setup status, active draft, or completed operational entities.
+   */
+  async getBusinessSetupStatus(
+    options?: RequestOptions,
+  ): Promise<BusinessSetupStatusResponseDto> {
+    const res = await this.request<BusinessSetupStatusResponseDto>(
+      '/api/v1/merchant/business-setup',
+      { method: 'GET' },
+      options,
+    );
+    return res.data;
+  }
+
+  /**
+   * Get or initialize active business setup draft.
+   */
+  async getOrCreateBusinessSetupDraft(
+    options?: RequestOptions,
+  ): Promise<BusinessSetupDraftDto> {
+    const res = await this.request<BusinessSetupDraftDto>(
+      '/api/v1/merchant/business-setup/draft',
+      { method: 'POST' },
+      options,
+    );
+    return res.data;
+  }
+
+  /**
+   * Autosave fields in active business setup draft.
+   */
+  async saveBusinessSetupDraft(
+    body: SaveBusinessSetupDraftDto,
+    options?: RequestOptions,
+  ): Promise<BusinessSetupDraftDto> {
+    const res = await this.request<BusinessSetupDraftDto>(
+      '/api/v1/merchant/business-setup',
+      { method: 'PATCH', body: JSON.stringify(body) },
+      options,
+    );
+    return res.data;
+  }
+
+  /**
+   * Atomically complete business and primary outlet setup (requires Idempotency-Key).
+   */
+  async completeBusinessSetup(
+    body: CompleteBusinessSetupDto,
+    idempotencyKey?: string,
+    options?: RequestOptions,
+  ): Promise<BusinessSetupCompletionResponseDto> {
+    const res = await this.request<BusinessSetupCompletionResponseDto>(
+      '/api/v1/merchant/business-setup/complete',
+      { method: 'POST', body: JSON.stringify(body) },
+      { ...options, idempotencyKey: idempotencyKey ?? options?.idempotencyKey },
+    );
+    return res.data;
+  }
+
+  /**
+   * Get operational business details.
+   */
+  async getBusiness(
+    options?: RequestOptions,
+  ): Promise<BusinessDto> {
+    const res = await this.request<BusinessDto>(
+      '/api/v1/merchant/business',
+      { method: 'GET' },
+      options,
+    );
+    return res.data;
+  }
+
+  /**
+   * Update operational business details.
+   */
+  async updateBusiness(
+    body: UpdateBusinessDto,
+    options?: RequestOptions,
+  ): Promise<BusinessDto> {
+    const res = await this.request<BusinessDto>(
+      '/api/v1/merchant/business',
+      { method: 'PATCH', body: JSON.stringify(body) },
+      options,
+    );
+    return res.data;
+  }
+
+  /**
+   * Get primary outlet details and weekly operating hours.
+   */
+  async getPrimaryOutlet(
+    options?: RequestOptions,
+  ): Promise<PrimaryOutletDetailResponseDto> {
+    const res = await this.request<PrimaryOutletDetailResponseDto>(
+      '/api/v1/merchant/outlets/primary',
+      { method: 'GET' },
+      options,
+    );
+    return res.data;
+  }
+
+  /**
+   * Update primary outlet physical address, coordinates, timezone, or weekly schedule.
+   */
+  async updatePrimaryOutlet(
+    body: UpdatePrimaryOutletDto,
+    options?: RequestOptions,
+  ): Promise<PrimaryOutletDetailResponseDto> {
+    const res = await this.request<PrimaryOutletDetailResponseDto>(
+      '/api/v1/merchant/outlets/primary',
+      { method: 'PATCH', body: JSON.stringify(body) },
       options,
     );
     return res.data;

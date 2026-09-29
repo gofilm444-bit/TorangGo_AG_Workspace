@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import {
   Screen,
@@ -10,10 +10,15 @@ import {
   ErrorState,
   spacing,
   colors,
+  radius,
 } from '@platform/mobile-ui';
 import { useOnboarding } from './onboarding-context';
 import { MerchantOnboardingScreen } from './onboarding-screen';
+import { BusinessSetupScreen } from '../business-setup/business-setup-screen';
+import { BusinessProfileScreen } from '../business-setup/business-profile-screen';
+import { merchantApiClient } from '../api';
 import { useMerchantAuth } from '../auth/auth-context';
+import type { BusinessSetupStatusResponseDto } from '@platform/api-client';
 
 export function OnboardingGate({ children }: { children: React.ReactNode }) {
   const { statusData, loading, error, refreshStatus, startOnboarding, repairOnboarding } = useOnboarding();
@@ -50,69 +55,9 @@ export function OnboardingGate({ children }: { children: React.ReactNode }) {
   }
 
   const state = statusData?.state ?? 'NOT_STARTED';
-  // 1. APPROVED: Explicit Phase 2B Approved View
+  // 1. APPROVED: Phase 2C Merchant Business & Outlet View
   if (state === 'APPROVED') {
-    return (
-      <Screen padding="md">
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.headerRow}>
-            <View>
-              <AppText variant="caption" color="textSecondary">
-                Status Pendaftaran
-              </AppText>
-              <AppText variant="h2" color="text">
-                Pendaftaran Merchant Disetujui
-              </AppText>
-            </View>
-            <TouchableOpacity onPress={() => logout()}>
-              <AppText variant="caption" color="error">
-                Keluar
-              </AppText>
-            </TouchableOpacity>
-          </View>
-
-          <Card variant="subtle" style={styles.approvedCard}>
-            <StatusBadge label="DISETUJUI (APPROVED)" variant="success" />
-            <AppText variant="h3" color="text" style={{ marginTop: spacing.md, marginBottom: 4 }}>
-              Identitas Merchant Anda telah diverifikasi.
-            </AppText>
-            <AppText variant="bodySmall" color="textSecondary" style={{ lineHeight: 20 }}>
-              Selamat! Profil merchant Anda telah berhasil diverifikasi oleh tim TorangGo. Tahap selanjutnya adalah pengaturan profil usaha dan outlet (Fase 2C).
-            </AppText>
-
-            {statusData?.currentSubmission && (
-              <View style={styles.submissionSnapshot}>
-                <AppText variant="label" color="textSecondary">
-                  DETAIL MERCHANT TERVERIFIKASI
-                </AppText>
-                <AppText variant="bodySmall" color="text">
-                  Usaha: {statusData.currentSubmission.proposedBusinessName}
-                </AppText>
-                <AppText variant="bodySmall" color="text">
-                  Pemilik: {statusData.currentSubmission.fullName}
-                </AppText>
-                <AppText variant="caption" color="textSecondary">
-                  Disetujui: {statusData.currentSubmission.submittedAt ? new Date(statusData.currentSubmission.submittedAt).toLocaleDateString('id-ID') : '—'}
-                </AppText>
-              </View>
-            )}
-          </Card>
-
-          <View style={styles.ctaRow}>
-            <Button
-              title="Lanjutkan Setup Usaha"
-              variant="primary"
-              onPress={() => {
-                Alert.alert(
-                  'Setup Usaha (Fase Selanjutnya)',
-                  'Fase 2C (Setup Usaha & Outlet) akan segera dibuka untuk melengkapi profil operasional toko Anda.',
-                );
-              }}
-            />
-          </View>
-        </ScrollView>
-      </Screen>
-    );
+    return <ApprovedMerchantView statusData={statusData} onLogout={logout} />;
   }
 
   // 2. DRAFT: Show 5-step form wizard
@@ -387,6 +332,190 @@ export function OnboardingGate({ children }: { children: React.ReactNode }) {
   }
 
   return <>{children}</>;
+}
+
+function ApprovedMerchantView({
+  statusData,
+  onLogout,
+}: {
+  statusData: any;
+  onLogout: () => void;
+}) {
+  const [setupStatus, setSetupStatus] = useState<BusinessSetupStatusResponseDto | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [inWizard, setInWizard] = useState(false);
+  const [viewingProfile, setViewingProfile] = useState(false);
+
+  const fetchSetupStatus = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await merchantApiClient.getBusinessSetupStatus();
+      setSetupStatus(res);
+    } catch {
+      // Keep setupStatus as null if error fetching
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchSetupStatus();
+  }, [fetchSetupStatus]);
+
+  if (viewingProfile) {
+    return (
+      <BusinessProfileScreen
+        onBack={() => {
+          setViewingProfile(false);
+          fetchSetupStatus();
+        }}
+      />
+    );
+  }
+
+  if (inWizard) {
+    return (
+      <BusinessSetupScreen
+        onComplete={() => {
+          setInWizard(false);
+          fetchSetupStatus();
+        }}
+        onCancel={() => setInWizard(false)}
+      />
+    );
+  }
+
+  const setupState = setupStatus?.state ?? 'NOT_STARTED';
+
+  if (loading) {
+    return (
+      <Screen padding="md">
+        <View style={styles.centerContainer}>
+          <LoadingState message="Memeriksa status profil usaha & outlet..." />
+        </View>
+      </Screen>
+    );
+  }
+
+  return (
+    <Screen padding="md">
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.headerRow}>
+          <View>
+            <AppText variant="caption" color="textSecondary">
+              Status Pendaftaran
+            </AppText>
+            <AppText variant="h2" color="text">
+              {setupState === 'COMPLETE'
+                ? 'Profil Usaha & Outlet Utama Siap'
+                : setupState === 'DRAFT'
+                  ? 'Lanjutkan Setup'
+                  : 'Mulai Setup Usaha'}
+            </AppText>
+          </View>
+          <TouchableOpacity onPress={onLogout}>
+            <AppText variant="caption" color="error">
+              Keluar
+            </AppText>
+          </TouchableOpacity>
+        </View>
+
+        <Card variant="subtle" style={styles.approvedCard}>
+          <StatusBadge
+            label={
+              setupState === 'COMPLETE'
+                ? 'PROFIL SIAP'
+                : 'DISETUJUI (APPROVED)'
+            }
+            variant="success"
+          />
+
+          {setupState === 'COMPLETE' && setupStatus?.business && setupStatus?.primaryOutlet ? (
+            <View style={{ marginTop: spacing.md }}>
+              <AppText variant="h3" color="text" style={{ marginBottom: 4 }}>
+                {setupStatus.business.name}
+              </AppText>
+              <AppText variant="bodySmall" color="textSecondary" style={{ marginBottom: 12 }}>
+                Kategori: {setupStatus.business.categoryCode}
+              </AppText>
+
+              <View style={styles.submissionSnapshot}>
+                <AppText variant="label" color="textSecondary">
+                  OUTLET UTAMA
+                </AppText>
+                <AppText variant="bodySmall" color="text" style={{ fontWeight: '600' }}>
+                  {setupStatus.primaryOutlet.name}
+                </AppText>
+                <AppText variant="caption" color="textSecondary">
+                  {setupStatus.primaryOutlet.addressDetail}
+                </AppText>
+                <AppText variant="caption" color="textSecondary">
+                  Kel. {setupStatus.primaryOutlet.villageOrSubdistrict}, Kec. {setupStatus.primaryOutlet.district}, {setupStatus.primaryOutlet.regencyOrCity}, {setupStatus.primaryOutlet.province}
+                </AppText>
+                <AppText variant="caption" color="textSecondary" style={{ marginTop: 4 }}>
+                  Telepon: {setupStatus.primaryOutlet.contactPhone} • Zona: {setupStatus.primaryOutlet.timezone}
+                </AppText>
+              </View>
+
+              <View style={{ marginTop: spacing.md, padding: spacing.sm, backgroundColor: '#f0fdf4', borderRadius: radius.md, borderWidth: 1, borderColor: '#bbf7d0' }}>
+                <AppText variant="caption" color="success" style={{ lineHeight: 18 }}>
+                  ✓ Profil usaha dan outlet utama telah terdaftar. Tahap berikutnya: Pengaturan katalog & menu produk.
+                </AppText>
+              </View>
+            </View>
+          ) : (
+            <View style={{ marginTop: spacing.md }}>
+              <AppText variant="h3" color="text" style={{ marginBottom: 4 }}>
+                Pendaftaran Merchant Disetujui
+              </AppText>
+              <AppText variant="bodySmall" color="textSecondary" style={{ lineHeight: 20 }}>
+                Identitas Merchant Anda telah diverifikasi. Selamat! Profil merchant Anda telah berhasil diverifikasi oleh tim TorangGo. Lanjutkan Setup Usaha untuk melengkapi profil usaha dan outlet utama.
+              </AppText>
+
+              {statusData?.currentSubmission && (
+                <View style={styles.submissionSnapshot}>
+                  <AppText variant="label" color="textSecondary">
+                    DETAIL MERCHANT TERVERIFIKASI
+                  </AppText>
+                  <AppText variant="bodySmall" color="text">
+                    Usaha: {statusData.currentSubmission.proposedBusinessName}
+                  </AppText>
+                  <AppText variant="bodySmall" color="text">
+                    Pemilik: {statusData.currentSubmission.fullName}
+                  </AppText>
+                  <AppText variant="caption" color="textSecondary">
+                    Disetujui: {statusData.currentSubmission.submittedAt ? new Date(statusData.currentSubmission.submittedAt).toLocaleDateString('id-ID') : '—'}
+                  </AppText>
+                </View>
+              )}
+            </View>
+          )}
+        </Card>
+
+        <View style={styles.ctaRow}>
+          {setupState === 'COMPLETE' ? (
+            <Button
+              title="Lihat Profil Usaha & Outlet"
+              variant="outline"
+              onPress={() => setViewingProfile(true)}
+            />
+          ) : setupState === 'DRAFT' ? (
+            <Button
+              title="Lanjutkan Setup"
+              variant="primary"
+              onPress={() => setInWizard(true)}
+            />
+          ) : (
+            <Button
+              title="Mulai Setup Usaha"
+              variant="primary"
+              onPress={() => setInWizard(true)}
+            />
+          )}
+        </View>
+      </ScrollView>
+    </Screen>
+  );
 }
 
 const styles = StyleSheet.create({

@@ -535,6 +535,94 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/merchant/business-setup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get current business setup status, active draft, or completed operational entities */
+        get: operations["MerchantBusinessController_getSetupStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Autosave fields in the active business setup draft */
+        patch: operations["MerchantBusinessController_saveDraft"];
+        trace?: never;
+    };
+    "/api/v1/merchant/business-setup/draft": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Get or initialize active business setup draft */
+        post: operations["MerchantBusinessController_getOrCreateDraft"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/merchant/business-setup/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Atomically complete business and primary outlet setup (requires Idempotency-Key) */
+        post: operations["MerchantBusinessController_completeSetup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/merchant/business": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get operational business details */
+        get: operations["MerchantBusinessController_getBusiness"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update operational business details (does not mutate onboarding submissions) */
+        patch: operations["MerchantBusinessController_updateBusiness"];
+        trace?: never;
+    };
+    "/api/v1/merchant/outlets/primary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get primary outlet details and weekly operating hours */
+        get: operations["MerchantBusinessController_getPrimaryOutlet"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update primary outlet physical address, coordinates, timezone, or weekly schedule */
+        patch: operations["MerchantBusinessController_updatePrimaryOutlet"];
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -938,6 +1026,107 @@ export interface components {
             /** @example 2026-09-21T03:00:00.000Z */
             createdAt: string;
         };
+        BusinessDto: {
+            /** @description Business UUID */
+            id: string;
+            /** @description Merchant Profile UUID */
+            merchantProfileId: string;
+            /**
+             * @description Business Name
+             * @example RM Manado Mantap
+             */
+            name: string;
+            /**
+             * @description Category Code
+             * @example KULINER
+             */
+            categoryCode: string;
+            /** @description Business Description */
+            description?: string | null;
+            /** @description Source Onboarding Submission UUID */
+            sourceOnboardingSubmissionId?: string | null;
+            /** @description Creation ISO timestamp */
+            createdAt: string;
+            /** @description Last update ISO timestamp */
+            updatedAt: string;
+        };
+        OutletDto: {
+            /** @description Outlet UUID */
+            id: string;
+            /** @description Business UUID */
+            businessId: string;
+            /** @description Outlet Name */
+            name: string;
+            /** @description Contact Phone (E.164) */
+            contactPhone: string;
+            /** @description Province */
+            province: string;
+            /** @description Regency or City */
+            regencyOrCity: string;
+            /** @description District */
+            district: string;
+            /** @description Village or Subdistrict */
+            villageOrSubdistrict: string;
+            /** @description Physical address detail */
+            addressDetail: string;
+            /** @description Postal code (nullable) */
+            postalCode?: string | null;
+            /** @description WGS84 latitude */
+            latitude: number;
+            /** @description WGS84 longitude */
+            longitude: number;
+            /** @description IANA Timezone */
+            timezone: string;
+            /**
+             * @description Is primary outlet flag
+             * @example true
+             */
+            isPrimary: boolean;
+            /** @description Creation ISO timestamp */
+            createdAt: string;
+            /** @description Last update ISO timestamp */
+            updatedAt: string;
+        };
+        OutletOperatingHoursDto: {
+            /** @description Operating hour row UUID */
+            id: string;
+            /** @description Outlet UUID */
+            outletId: string;
+            /**
+             * @description Day of week (1=Monday, 7=Sunday)
+             * @example 1
+             */
+            dayOfWeek: number;
+            /**
+             * @description Whether outlet is closed on this day
+             * @example false
+             */
+            isClosed: boolean;
+            /**
+             * @description Opening time (HH:mm)
+             * @example 08:00
+             */
+            openTime?: string | null;
+            /**
+             * @description Closing time (HH:mm)
+             * @example 21:00
+             */
+            closeTime?: string | null;
+            /** @description Creation ISO timestamp */
+            createdAt: string;
+            /** @description Last update ISO timestamp */
+            updatedAt: string;
+        };
+        AdminMerchantOperationalSummaryDto: {
+            /**
+             * @example COMPLETE
+             * @enum {string}
+             */
+            setupState: "NOT_STARTED" | "DRAFT" | "COMPLETE";
+            business?: components["schemas"]["BusinessDto"] | null;
+            primaryOutlet?: components["schemas"]["OutletDto"] | null;
+            operatingHours?: components["schemas"]["OutletOperatingHoursDto"][] | null;
+        };
         MerchantVerificationDetailResponseDto: {
             /** @example 018f6c5e-8b1b-7a6c-9c3f-4e5f6a7b8c9d */
             profileId: string;
@@ -962,6 +1151,7 @@ export interface components {
             currentSubmissionId?: string | null;
             currentSubmission?: components["schemas"]["MerchantOnboardingSubmissionDto"] | null;
             auditLogs: components["schemas"]["VerificationAuditLogItemDto"][];
+            operationalSummary?: components["schemas"]["AdminMerchantOperationalSummaryDto"] | null;
         };
         RevealNikResponseDto: {
             /**
@@ -1168,6 +1358,213 @@ export interface components {
              * @example true
              */
             privacyConsentAccepted: boolean;
+        };
+        BusinessSetupDraftPayloadDto: {
+            /**
+             * @description Business name
+             * @example RM Manado Mantap
+             */
+            name?: string;
+            /**
+             * @description Business category code
+             * @example KULINER
+             */
+            categoryCode?: string;
+            /**
+             * @description Business description
+             * @example Masakan khas Manado autentik
+             */
+            description?: string | null;
+        };
+        OutletSetupDraftPayloadDto: {
+            /**
+             * @description Primary outlet name
+             * @example RM Manado Mantap - Cabang Sam Ratulangi
+             */
+            name?: string;
+            /**
+             * @description Outlet contact phone
+             * @example +6281234567890
+             */
+            contactPhone?: string;
+            /**
+             * @description Province
+             * @example Sulawesi Utara
+             */
+            province?: string;
+            /**
+             * @description Regency or City
+             * @example Kota Manado
+             */
+            regencyOrCity?: string;
+            /**
+             * @description District
+             * @example Wenang
+             */
+            district?: string;
+            /**
+             * @description Village or Subdistrict
+             * @example Bumi Beringin
+             */
+            villageOrSubdistrict?: string;
+            /**
+             * @description Full physical address detail
+             * @example Jl. Sam Ratulangi No. 45
+             */
+            addressDetail?: string;
+            /**
+             * @description Postal code (optional)
+             * @example 95111
+             */
+            postalCode?: string | null;
+            /**
+             * @description WGS84 latitude (-90 to 90)
+             * @example 1.4748
+             */
+            latitude?: number;
+            /**
+             * @description WGS84 longitude (-180 to 180)
+             * @example 124.8421
+             */
+            longitude?: number;
+            /**
+             * @description IANA Timezone
+             * @example Asia/Makassar
+             */
+            timezone?: string;
+        };
+        OperatingHourItemDto: {
+            /**
+             * @description Day of week: 1 (Monday) to 7 (Sunday)
+             * @example 1
+             */
+            dayOfWeek: number;
+            /**
+             * @description Whether the outlet is closed on this day
+             * @example false
+             */
+            isClosed: boolean;
+            /**
+             * @description Opening time (HH:mm)
+             * @example 08:00
+             */
+            openTime?: string | null;
+            /**
+             * @description Closing time (HH:mm)
+             * @example 21:00
+             */
+            closeTime?: string | null;
+        };
+        BusinessSetupDraftDto: {
+            /**
+             * @description Draft UUID
+             * @example 01912f7a-8b1e-7f3c-91d4-8d9e2a1b3c4d
+             */
+            id: string;
+            /**
+             * @description Merchant Profile UUID
+             * @example 01912f7a-8b1e-7f3c-91d4-8d9e2a1b3c4e
+             */
+            merchantProfileId: string;
+            /** @description Source Onboarding Submission UUID */
+            sourceOnboardingSubmissionId?: string | null;
+            business: components["schemas"]["BusinessSetupDraftPayloadDto"];
+            outlet: components["schemas"]["OutletSetupDraftPayloadDto"];
+            operatingHours: components["schemas"]["OperatingHourItemDto"][];
+            /**
+             * @description Current setup wizard step (1 to 4)
+             * @example 1
+             */
+            currentStep: number;
+            /** @description Completion timestamp */
+            completedAt?: string | null;
+            /** @description Creation ISO timestamp */
+            createdAt: string;
+            /** @description Last update ISO timestamp */
+            updatedAt: string;
+        };
+        BusinessSetupStatusResponseDto: {
+            /**
+             * @description Derived setup state
+             * @enum {string}
+             */
+            state: "NOT_STARTED" | "DRAFT" | "COMPLETE";
+            /** @description Merchant Profile UUID */
+            merchantProfileId: string;
+            /** @description Merchant Profile Verification Status */
+            profileStatus: string;
+            /** @description Business name snapshot from profile */
+            businessName?: string | null;
+            draft?: components["schemas"]["BusinessSetupDraftDto"] | null;
+            business?: components["schemas"]["BusinessDto"] | null;
+            primaryOutlet?: components["schemas"]["OutletDto"] | null;
+            operatingHours?: components["schemas"]["OutletOperatingHoursDto"][] | null;
+        };
+        SaveBusinessSetupDraftDto: {
+            business?: components["schemas"]["BusinessSetupDraftPayloadDto"];
+            outlet?: components["schemas"]["OutletSetupDraftPayloadDto"];
+            operatingHours?: components["schemas"]["OperatingHourItemDto"][];
+            /**
+             * @description Current wizard step (1-4)
+             * @example 1
+             */
+            currentStep?: number;
+        };
+        CompleteBusinessSetupDto: {
+            business: components["schemas"]["BusinessSetupDraftPayloadDto"];
+            outlet: components["schemas"]["OutletSetupDraftPayloadDto"];
+            operatingHours: components["schemas"]["OperatingHourItemDto"][];
+        };
+        BusinessSetupCompletionResponseDto: {
+            /** @example COMPLETE */
+            state: string;
+            business: components["schemas"]["BusinessDto"];
+            primaryOutlet: components["schemas"]["OutletDto"];
+            operatingHours: components["schemas"]["OutletOperatingHoursDto"][];
+        };
+        UpdateBusinessDto: {
+            /**
+             * @description Business Name
+             * @example RM Manado Mantap
+             */
+            name?: string;
+            /**
+             * @description Category Code
+             * @example KULINER
+             */
+            categoryCode?: string;
+            /** @description Description */
+            description?: string | null;
+        };
+        PrimaryOutletDetailResponseDto: {
+            outlet: components["schemas"]["OutletDto"];
+            operatingHours: components["schemas"]["OutletOperatingHoursDto"][];
+        };
+        UpdatePrimaryOutletDto: {
+            /** @description Outlet Name */
+            name?: string;
+            /** @description Contact Phone */
+            contactPhone?: string;
+            /** @description Province */
+            province?: string;
+            /** @description Regency or City */
+            regencyOrCity?: string;
+            /** @description District */
+            district?: string;
+            /** @description Village or Subdistrict */
+            villageOrSubdistrict?: string;
+            /** @description Address detail */
+            addressDetail?: string;
+            /** @description Postal Code (optional) */
+            postalCode?: string | null;
+            /** @description WGS84 Latitude */
+            latitude?: number;
+            /** @description WGS84 Longitude */
+            longitude?: number;
+            /** @description IANA Timezone */
+            timezone?: string;
+            /** @description Optional updated 7-day schedule */
+            operatingHours?: components["schemas"]["OperatingHourItemDto"][];
         };
     };
     responses: never;
@@ -2435,6 +2832,342 @@ export interface operations {
             };
             /** @description Conflict: profile is not in REJECTED status */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MerchantBusinessController_getSetupStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BusinessSetupStatusResponseDto"];
+                };
+            };
+            /** @description Unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden (profile not found or non-approved status) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MerchantBusinessController_saveDraft: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveBusinessSetupDraftDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BusinessSetupDraftDto"];
+                };
+            };
+            /** @description Validation error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden (requires APPROVED merchant profile) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Conflict (setup already complete) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MerchantBusinessController_getOrCreateDraft: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BusinessSetupDraftDto"];
+                };
+            };
+            /** @description Unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden (requires APPROVED merchant profile) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Conflict (setup already complete) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MerchantBusinessController_completeSetup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CompleteBusinessSetupDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BusinessSetupCompletionResponseDto"];
+                };
+            };
+            /** @description Validation error in business, outlet address, coordinates, or schedule */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden (requires APPROVED merchant profile) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MerchantBusinessController_getBusiness: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BusinessDto"];
+                };
+            };
+            /** @description Unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Business not found / setup not completed */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MerchantBusinessController_updateBusiness: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateBusinessDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BusinessDto"];
+                };
+            };
+            /** @description Validation error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden (requires APPROVED merchant profile) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Business not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MerchantBusinessController_getPrimaryOutlet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PrimaryOutletDetailResponseDto"];
+                };
+            };
+            /** @description Unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Primary outlet not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MerchantBusinessController_updatePrimaryOutlet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdatePrimaryOutletDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PrimaryOutletDetailResponseDto"];
+                };
+            };
+            /** @description Validation error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden (requires APPROVED merchant profile) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Primary outlet not found */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

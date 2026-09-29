@@ -1431,6 +1431,328 @@
           "Merchant Onboarding"
         ]
       }
+    },
+    "/api/v1/merchant/business-setup": {
+      "get": {
+        "operationId": "MerchantBusinessController_getSetupStatus",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BusinessSetupStatusResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "403": {
+            "description": "Forbidden (profile not found or non-approved status)"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get current business setup status, active draft, or completed operational entities",
+        "tags": [
+          "Merchant Business"
+        ]
+      },
+      "patch": {
+        "operationId": "MerchantBusinessController_saveDraft",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveBusinessSetupDraftDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BusinessSetupDraftDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "403": {
+            "description": "Forbidden (requires APPROVED merchant profile)"
+          },
+          "409": {
+            "description": "Conflict (setup already complete)"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Autosave fields in the active business setup draft",
+        "tags": [
+          "Merchant Business"
+        ]
+      }
+    },
+    "/api/v1/merchant/business-setup/draft": {
+      "post": {
+        "operationId": "MerchantBusinessController_getOrCreateDraft",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BusinessSetupDraftDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "403": {
+            "description": "Forbidden (requires APPROVED merchant profile)"
+          },
+          "409": {
+            "description": "Conflict (setup already complete)"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get or initialize active business setup draft",
+        "tags": [
+          "Merchant Business"
+        ]
+      }
+    },
+    "/api/v1/merchant/business-setup/complete": {
+      "post": {
+        "operationId": "MerchantBusinessController_completeSetup",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteBusinessSetupDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BusinessSetupCompletionResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error in business, outlet address, coordinates, or schedule"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "403": {
+            "description": "Forbidden (requires APPROVED merchant profile)"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Atomically complete business and primary outlet setup (requires Idempotency-Key)",
+        "tags": [
+          "Merchant Business"
+        ]
+      }
+    },
+    "/api/v1/merchant/business": {
+      "get": {
+        "operationId": "MerchantBusinessController_getBusiness",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BusinessDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "404": {
+            "description": "Business not found / setup not completed"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get operational business details",
+        "tags": [
+          "Merchant Business"
+        ]
+      },
+      "patch": {
+        "operationId": "MerchantBusinessController_updateBusiness",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBusinessDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BusinessDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "403": {
+            "description": "Forbidden (requires APPROVED merchant profile)"
+          },
+          "404": {
+            "description": "Business not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update operational business details (does not mutate onboarding submissions)",
+        "tags": [
+          "Merchant Business"
+        ]
+      }
+    },
+    "/api/v1/merchant/outlets/primary": {
+      "get": {
+        "operationId": "MerchantBusinessController_getPrimaryOutlet",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrimaryOutletDetailResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "404": {
+            "description": "Primary outlet not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get primary outlet details and weekly operating hours",
+        "tags": [
+          "Merchant Business"
+        ]
+      },
+      "patch": {
+        "operationId": "MerchantBusinessController_updatePrimaryOutlet",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePrimaryOutletDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrimaryOutletDetailResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "403": {
+            "description": "Forbidden (requires APPROVED merchant profile)"
+          },
+          "404": {
+            "description": "Primary outlet not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update primary outlet physical address, coordinates, timezone, or weekly schedule",
+        "tags": [
+          "Merchant Business"
+        ]
+      }
     }
   },
   "info": {
@@ -2323,6 +2645,236 @@
           "createdAt"
         ]
       },
+      "BusinessDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Business UUID"
+          },
+          "merchantProfileId": {
+            "type": "string",
+            "description": "Merchant Profile UUID"
+          },
+          "name": {
+            "type": "string",
+            "description": "Business Name",
+            "example": "RM Manado Mantap"
+          },
+          "categoryCode": {
+            "type": "string",
+            "description": "Category Code",
+            "example": "KULINER"
+          },
+          "description": {
+            "type": "string",
+            "description": "Business Description",
+            "nullable": true
+          },
+          "sourceOnboardingSubmissionId": {
+            "type": "string",
+            "description": "Source Onboarding Submission UUID",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Creation ISO timestamp"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Last update ISO timestamp"
+          }
+        },
+        "required": [
+          "id",
+          "merchantProfileId",
+          "name",
+          "categoryCode",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "OutletDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Outlet UUID"
+          },
+          "businessId": {
+            "type": "string",
+            "description": "Business UUID"
+          },
+          "name": {
+            "type": "string",
+            "description": "Outlet Name"
+          },
+          "contactPhone": {
+            "type": "string",
+            "description": "Contact Phone (E.164)"
+          },
+          "province": {
+            "type": "string",
+            "description": "Province"
+          },
+          "regencyOrCity": {
+            "type": "string",
+            "description": "Regency or City"
+          },
+          "district": {
+            "type": "string",
+            "description": "District"
+          },
+          "villageOrSubdistrict": {
+            "type": "string",
+            "description": "Village or Subdistrict"
+          },
+          "addressDetail": {
+            "type": "string",
+            "description": "Physical address detail"
+          },
+          "postalCode": {
+            "type": "string",
+            "description": "Postal code (nullable)",
+            "nullable": true
+          },
+          "latitude": {
+            "type": "number",
+            "description": "WGS84 latitude"
+          },
+          "longitude": {
+            "type": "number",
+            "description": "WGS84 longitude"
+          },
+          "timezone": {
+            "type": "string",
+            "description": "IANA Timezone"
+          },
+          "isPrimary": {
+            "type": "boolean",
+            "description": "Is primary outlet flag",
+            "example": true
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Creation ISO timestamp"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Last update ISO timestamp"
+          }
+        },
+        "required": [
+          "id",
+          "businessId",
+          "name",
+          "contactPhone",
+          "province",
+          "regencyOrCity",
+          "district",
+          "villageOrSubdistrict",
+          "addressDetail",
+          "latitude",
+          "longitude",
+          "timezone",
+          "isPrimary",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "OutletOperatingHoursDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Operating hour row UUID"
+          },
+          "outletId": {
+            "type": "string",
+            "description": "Outlet UUID"
+          },
+          "dayOfWeek": {
+            "type": "number",
+            "description": "Day of week (1=Monday, 7=Sunday)",
+            "example": 1
+          },
+          "isClosed": {
+            "type": "boolean",
+            "description": "Whether outlet is closed on this day",
+            "example": false
+          },
+          "openTime": {
+            "type": "string",
+            "description": "Opening time (HH:mm)",
+            "nullable": true,
+            "example": "08:00"
+          },
+          "closeTime": {
+            "type": "string",
+            "description": "Closing time (HH:mm)",
+            "nullable": true,
+            "example": "21:00"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Creation ISO timestamp"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Last update ISO timestamp"
+          }
+        },
+        "required": [
+          "id",
+          "outletId",
+          "dayOfWeek",
+          "isClosed",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "AdminMerchantOperationalSummaryDto": {
+        "type": "object",
+        "properties": {
+          "setupState": {
+            "type": "string",
+            "enum": [
+              "NOT_STARTED",
+              "DRAFT",
+              "COMPLETE"
+            ],
+            "example": "COMPLETE"
+          },
+          "business": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BusinessDto"
+              }
+            ]
+          },
+          "primaryOutlet": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OutletDto"
+              }
+            ]
+          },
+          "operatingHours": {
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OutletOperatingHoursDto"
+            }
+          }
+        },
+        "required": [
+          "setupState"
+        ]
+      },
       "MerchantVerificationDetailResponseDto": {
         "type": "object",
         "properties": {
@@ -2385,6 +2937,15 @@
             "items": {
               "$ref": "#/components/schemas/VerificationAuditLogItemDto"
             }
+          },
+          "operationalSummary": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AdminMerchantOperationalSummaryDto"
+              }
+            ]
           }
         },
         "required": [
@@ -2892,6 +3453,432 @@
           "merchantTermsAccepted",
           "privacyConsentAccepted"
         ]
+      },
+      "BusinessSetupDraftPayloadDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Business name",
+            "example": "RM Manado Mantap",
+            "maxLength": 255
+          },
+          "categoryCode": {
+            "type": "string",
+            "description": "Business category code",
+            "example": "KULINER",
+            "maxLength": 64
+          },
+          "description": {
+            "type": "string",
+            "description": "Business description",
+            "example": "Masakan khas Manado autentik",
+            "nullable": true
+          }
+        }
+      },
+      "OutletSetupDraftPayloadDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Primary outlet name",
+            "example": "RM Manado Mantap - Cabang Sam Ratulangi",
+            "maxLength": 255
+          },
+          "contactPhone": {
+            "type": "string",
+            "description": "Outlet contact phone",
+            "example": "+6281234567890",
+            "maxLength": 32
+          },
+          "province": {
+            "type": "string",
+            "description": "Province",
+            "example": "Sulawesi Utara",
+            "maxLength": 128
+          },
+          "regencyOrCity": {
+            "type": "string",
+            "description": "Regency or City",
+            "example": "Kota Manado",
+            "maxLength": 128
+          },
+          "district": {
+            "type": "string",
+            "description": "District",
+            "example": "Wenang",
+            "maxLength": 128
+          },
+          "villageOrSubdistrict": {
+            "type": "string",
+            "description": "Village or Subdistrict",
+            "example": "Bumi Beringin",
+            "maxLength": 128
+          },
+          "addressDetail": {
+            "type": "string",
+            "description": "Full physical address detail",
+            "example": "Jl. Sam Ratulangi No. 45"
+          },
+          "postalCode": {
+            "type": "string",
+            "description": "Postal code (optional)",
+            "example": "95111",
+            "nullable": true,
+            "maxLength": 16
+          },
+          "latitude": {
+            "type": "number",
+            "description": "WGS84 latitude (-90 to 90)",
+            "example": 1.4748
+          },
+          "longitude": {
+            "type": "number",
+            "description": "WGS84 longitude (-180 to 180)",
+            "example": 124.8421
+          },
+          "timezone": {
+            "type": "string",
+            "description": "IANA Timezone",
+            "example": "Asia/Makassar",
+            "maxLength": 64
+          }
+        }
+      },
+      "OperatingHourItemDto": {
+        "type": "object",
+        "properties": {
+          "dayOfWeek": {
+            "type": "number",
+            "description": "Day of week: 1 (Monday) to 7 (Sunday)",
+            "example": 1,
+            "minimum": 1,
+            "maximum": 7
+          },
+          "isClosed": {
+            "type": "boolean",
+            "description": "Whether the outlet is closed on this day",
+            "example": false
+          },
+          "openTime": {
+            "type": "string",
+            "description": "Opening time (HH:mm)",
+            "example": "08:00",
+            "nullable": true
+          },
+          "closeTime": {
+            "type": "string",
+            "description": "Closing time (HH:mm)",
+            "example": "21:00",
+            "nullable": true
+          }
+        },
+        "required": [
+          "dayOfWeek",
+          "isClosed"
+        ]
+      },
+      "BusinessSetupDraftDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Draft UUID",
+            "example": "01912f7a-8b1e-7f3c-91d4-8d9e2a1b3c4d"
+          },
+          "merchantProfileId": {
+            "type": "string",
+            "description": "Merchant Profile UUID",
+            "example": "01912f7a-8b1e-7f3c-91d4-8d9e2a1b3c4e"
+          },
+          "sourceOnboardingSubmissionId": {
+            "type": "string",
+            "description": "Source Onboarding Submission UUID",
+            "nullable": true
+          },
+          "business": {
+            "$ref": "#/components/schemas/BusinessSetupDraftPayloadDto"
+          },
+          "outlet": {
+            "$ref": "#/components/schemas/OutletSetupDraftPayloadDto"
+          },
+          "operatingHours": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OperatingHourItemDto"
+            }
+          },
+          "currentStep": {
+            "type": "number",
+            "description": "Current setup wizard step (1 to 4)",
+            "example": 1
+          },
+          "completedAt": {
+            "type": "string",
+            "description": "Completion timestamp",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Creation ISO timestamp"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Last update ISO timestamp"
+          }
+        },
+        "required": [
+          "id",
+          "merchantProfileId",
+          "business",
+          "outlet",
+          "operatingHours",
+          "currentStep",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "BusinessSetupStatusResponseDto": {
+        "type": "object",
+        "properties": {
+          "state": {
+            "type": "string",
+            "enum": [
+              "NOT_STARTED",
+              "DRAFT",
+              "COMPLETE"
+            ],
+            "description": "Derived setup state"
+          },
+          "merchantProfileId": {
+            "type": "string",
+            "description": "Merchant Profile UUID"
+          },
+          "profileStatus": {
+            "type": "string",
+            "description": "Merchant Profile Verification Status"
+          },
+          "businessName": {
+            "type": "string",
+            "description": "Business name snapshot from profile",
+            "nullable": true
+          },
+          "draft": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BusinessSetupDraftDto"
+              }
+            ]
+          },
+          "business": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BusinessDto"
+              }
+            ]
+          },
+          "primaryOutlet": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OutletDto"
+              }
+            ]
+          },
+          "operatingHours": {
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OutletOperatingHoursDto"
+            }
+          }
+        },
+        "required": [
+          "state",
+          "merchantProfileId",
+          "profileStatus"
+        ]
+      },
+      "SaveBusinessSetupDraftDto": {
+        "type": "object",
+        "properties": {
+          "business": {
+            "$ref": "#/components/schemas/BusinessSetupDraftPayloadDto"
+          },
+          "outlet": {
+            "$ref": "#/components/schemas/OutletSetupDraftPayloadDto"
+          },
+          "operatingHours": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OperatingHourItemDto"
+            }
+          },
+          "currentStep": {
+            "type": "number",
+            "description": "Current wizard step (1-4)",
+            "example": 1
+          }
+        }
+      },
+      "CompleteBusinessSetupDto": {
+        "type": "object",
+        "properties": {
+          "business": {
+            "$ref": "#/components/schemas/BusinessSetupDraftPayloadDto"
+          },
+          "outlet": {
+            "$ref": "#/components/schemas/OutletSetupDraftPayloadDto"
+          },
+          "operatingHours": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OperatingHourItemDto"
+            }
+          }
+        },
+        "required": [
+          "business",
+          "outlet",
+          "operatingHours"
+        ]
+      },
+      "BusinessSetupCompletionResponseDto": {
+        "type": "object",
+        "properties": {
+          "state": {
+            "type": "string",
+            "example": "COMPLETE"
+          },
+          "business": {
+            "$ref": "#/components/schemas/BusinessDto"
+          },
+          "primaryOutlet": {
+            "$ref": "#/components/schemas/OutletDto"
+          },
+          "operatingHours": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OutletOperatingHoursDto"
+            }
+          }
+        },
+        "required": [
+          "state",
+          "business",
+          "primaryOutlet",
+          "operatingHours"
+        ]
+      },
+      "UpdateBusinessDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Business Name",
+            "example": "RM Manado Mantap",
+            "maxLength": 255
+          },
+          "categoryCode": {
+            "type": "string",
+            "description": "Category Code",
+            "example": "KULINER",
+            "maxLength": 64
+          },
+          "description": {
+            "type": "string",
+            "description": "Description",
+            "nullable": true
+          }
+        }
+      },
+      "PrimaryOutletDetailResponseDto": {
+        "type": "object",
+        "properties": {
+          "outlet": {
+            "$ref": "#/components/schemas/OutletDto"
+          },
+          "operatingHours": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OutletOperatingHoursDto"
+            }
+          }
+        },
+        "required": [
+          "outlet",
+          "operatingHours"
+        ]
+      },
+      "UpdatePrimaryOutletDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Outlet Name",
+            "maxLength": 255
+          },
+          "contactPhone": {
+            "type": "string",
+            "description": "Contact Phone",
+            "maxLength": 32
+          },
+          "province": {
+            "type": "string",
+            "description": "Province",
+            "maxLength": 128
+          },
+          "regencyOrCity": {
+            "type": "string",
+            "description": "Regency or City",
+            "maxLength": 128
+          },
+          "district": {
+            "type": "string",
+            "description": "District",
+            "maxLength": 128
+          },
+          "villageOrSubdistrict": {
+            "type": "string",
+            "description": "Village or Subdistrict",
+            "maxLength": 128
+          },
+          "addressDetail": {
+            "type": "string",
+            "description": "Address detail"
+          },
+          "postalCode": {
+            "type": "string",
+            "description": "Postal Code (optional)",
+            "nullable": true,
+            "maxLength": 16
+          },
+          "latitude": {
+            "type": "number",
+            "description": "WGS84 Latitude"
+          },
+          "longitude": {
+            "type": "number",
+            "description": "WGS84 Longitude"
+          },
+          "timezone": {
+            "type": "string",
+            "description": "IANA Timezone"
+          },
+          "operatingHours": {
+            "description": "Optional updated 7-day schedule",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OperatingHourItemDto"
+            }
+          }
+        }
       }
     }
   }

@@ -139,4 +139,89 @@ describe('TorangGo Mitra / Merchant Mobile Shell Foundation Suite', () => {
     assert.ok(contextContent.includes('computeFirstIncompleteStep'), 'Computes first incomplete step on resume');
     assert.ok(contextContent.includes('saveSequenceRef'), 'Uses sequence guard against stale autosaves');
   });
+
+  it('implements Phase 2C business setup and profile requirements', async () => {
+    const fs = await import('node:fs');
+    const path = await import('node:path');
+    const { fileURLToPath } = await import('node:url');
+    const dirname = path.dirname(fileURLToPath(import.meta.url));
+
+    const setupScreenPath = path.resolve(dirname, '../src/business-setup/business-setup-screen.tsx');
+    const profileScreenPath = path.resolve(dirname, '../src/business-setup/business-profile-screen.tsx');
+    const gatePath = path.resolve(dirname, '../src/onboarding/onboarding-gate.tsx');
+
+    assert.ok(fs.existsSync(setupScreenPath), 'business-setup-screen.tsx must exist');
+    assert.ok(fs.existsSync(profileScreenPath), 'business-profile-screen.tsx must exist');
+
+    const setupContent = fs.readFileSync(setupScreenPath, 'utf-8');
+    const profileContent = fs.readFileSync(profileScreenPath, 'utf-8');
+    const gateContent = fs.readFileSync(gatePath, 'utf-8');
+
+    // 1. Categories: uses canonical Phase 2B categories, no future parked placeholders
+    assert.ok(setupContent.includes('MERCHANT_BUSINESS_CATEGORIES'), 'Uses canonical categories');
+    assert.ok(!setupContent.includes("'PHARMACY'"), 'Does not include parked PHARMACY vertical');
+    assert.ok(!setupContent.includes("'SERVICE'"), 'Does not include parked SERVICE vertical');
+
+    // 2. Coordinate autosave: never converts empty to 0, preserves explicit 0
+    assert.ok(
+      setupContent.includes("const parsedLat = trimmedLat !== '' ? parseFloat(trimmedLat) : undefined"),
+      'Preserves empty latitude as undefined',
+    );
+    assert.ok(
+      setupContent.includes("const parsedLon = trimmedLon !== '' ? parseFloat(trimmedLon) : undefined"),
+      'Preserves empty longitude as undefined',
+    );
+    assert.ok(!setupContent.includes('isNaN(latNum) ? 0 : latNum'), 'Does not coerce NaN/empty latitude to 0');
+    assert.ok(!setupContent.includes('isNaN(lonNum) ? 0 : lonNum'), 'Does not coerce NaN/empty longitude to 0');
+
+    // 3. COMPLETE flow: opens profile screen, does not initialize new setup draft
+    assert.ok(gateContent.includes('BusinessProfileScreen'), 'Gate renders BusinessProfileScreen for COMPLETE');
+    assert.ok(gateContent.includes('setViewingProfile(true)'), 'COMPLETE CTA triggers profile view');
+    assert.ok(profileContent.includes('merchantApiClient.getBusiness'), 'Profile screen fetches business');
+    assert.ok(profileContent.includes('merchantApiClient.getPrimaryOutlet'), 'Profile screen fetches primary outlet');
+    assert.ok(
+      !profileContent.includes('getOrCreateBusinessSetupDraft'),
+      'Profile screen never initializes setup draft',
+    );
+    assert.ok(profileContent.includes('merchantApiClient.updateBusiness'), 'Profile screen supports business update');
+    assert.ok(
+      profileContent.includes('merchantApiClient.updatePrimaryOutlet'),
+      'Profile screen supports outlet update',
+    );
+
+    // 4. Pre-Checkpoint Final Correction: Canonical categories and complete outlet editing
+    const onboardingScreenContent = fs.readFileSync(
+      path.resolve(dirname, '../src/onboarding/onboarding-screen.tsx'),
+      'utf-8',
+    );
+    assert.ok(
+      onboardingScreenContent.includes("from '@platform/shared-types'"),
+      'Onboarding screen imports from @platform/shared-types',
+    );
+    assert.ok(
+      onboardingScreenContent.includes('MERCHANT_BUSINESS_CATEGORIES'),
+      'Onboarding screen uses canonical MERCHANT_BUSINESS_CATEGORIES',
+    );
+    assert.ok(
+      !setupContent.includes("useState('FOOD_BEVERAGE')"),
+      'BusinessSetupScreen does not initialize category to FOOD_BEVERAGE',
+    );
+    assert.ok(
+      setupContent.includes("useState('')"),
+      'BusinessSetupScreen initializes category to empty string',
+    );
+
+    // Complete Outlet Profile mutability in BusinessProfileScreen
+    assert.ok(profileContent.includes('contactPhone'), 'Profile screen edits outlet contact phone');
+    assert.ok(profileContent.includes('province'), 'Profile screen edits outlet province');
+    assert.ok(profileContent.includes('regencyOrCity'), 'Profile screen edits outlet regency/city');
+    assert.ok(profileContent.includes('district'), 'Profile screen edits outlet district');
+    assert.ok(profileContent.includes('villageOrSubdistrict'), 'Profile screen edits outlet village');
+    assert.ok(profileContent.includes('addressDetail'), 'Profile screen edits outlet address detail');
+    assert.ok(profileContent.includes('postalCode'), 'Profile screen edits outlet postal code');
+    assert.ok(profileContent.includes('latitude'), 'Profile screen edits outlet latitude');
+    assert.ok(profileContent.includes('longitude'), 'Profile screen edits outlet longitude');
+    assert.ok(profileContent.includes('timezone'), 'Profile screen edits outlet timezone');
+    assert.ok(profileContent.includes('schedule'), 'Profile screen edits 7-day schedule');
+  });
 });

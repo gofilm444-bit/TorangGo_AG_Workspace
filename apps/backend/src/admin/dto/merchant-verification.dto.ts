@@ -5,6 +5,25 @@ import {
 } from '@platform/shared-types';
 import { VerificationAuditLogItemDto } from './verification-audit.dto.js';
 import { MerchantOnboardingSubmissionDto } from '../../merchant-onboarding/dto/merchant-onboarding.dto.js';
+import {
+  BusinessDto,
+  OutletDto,
+  OutletOperatingHoursDto,
+} from '../../merchant-business/dto/merchant-business.dto.js';
+
+export class AdminMerchantOperationalSummaryDto {
+  @ApiProperty({ enum: ['NOT_STARTED', 'DRAFT', 'COMPLETE'], example: 'COMPLETE' })
+  setupState!: 'NOT_STARTED' | 'DRAFT' | 'COMPLETE';
+
+  @ApiPropertyOptional({ type: BusinessDto, nullable: true })
+  business!: BusinessDto | null;
+
+  @ApiPropertyOptional({ type: OutletDto, nullable: true })
+  primaryOutlet!: OutletDto | null;
+
+  @ApiPropertyOptional({ type: [OutletOperatingHoursDto], nullable: true })
+  operatingHours!: OutletOperatingHoursDto[] | null;
+}
 
 export class MerchantVerificationItemDto {
   @ApiProperty({ example: '018f6c5e-8b1b-7a6c-9c3f-4e5f6a7b8c9d' })
@@ -55,6 +74,9 @@ export class MerchantVerificationDetailResponseDto extends MerchantVerificationI
 
   @ApiProperty({ type: [VerificationAuditLogItemDto] })
   auditLogs!: VerificationAuditLogItemDto[];
+
+  @ApiPropertyOptional({ type: AdminMerchantOperationalSummaryDto, nullable: true })
+  operationalSummary?: AdminMerchantOperationalSummaryDto | null;
 }
 
 export class RevealNikResponseDto {
