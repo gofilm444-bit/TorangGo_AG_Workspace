@@ -1327,4 +1327,3 @@ describe('Phase 2C: Merchant Business & Single Outlet Foundation Integration Sui
     assert.equal(updateLonZero.outlet.longitude, 0);
   });
 });
-

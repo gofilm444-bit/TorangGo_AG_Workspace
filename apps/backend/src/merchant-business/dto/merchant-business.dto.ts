@@ -485,4 +485,3 @@ export class PrimaryOutletDetailResponseDto {
   @ApiProperty({ type: [OutletOperatingHoursDto] })
   operatingHours!: OutletOperatingHoursDto[];
 }
-
