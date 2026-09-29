@@ -108,13 +108,15 @@ Delivered the complete partner onboarding lifecycle from TorangGo Mitra applicat
 
 ### 2C — Business + Single Outlet Foundation
 
-**NEXT / NOT STARTED.** Concept Anchor v1.0 is **LOCKED**; implementation is **NOT STARTED**.
+**COMPLETE / LOCKED.** Checkpoint: `50ec32fb716a14e74cfa54fa937c7f1a6df49f68` (implementation); follow-up whitespace checkpoint: `5c14656bceb0955d431ffffba8a5607d496383d6` (GitHub Actions CI Run #12 & #13: SUCCESS per user anchor).
 
-Phase 2C establishes the operational commercial Business and physical primary Outlet for verified merchants.
+**Mobile milestone:** TorangGo Mitra delivered the 4-step Business & Primary Outlet setup wizard and post-setup operational profile management.
 
-- **Precondition:** Begins only after partner identity reaches `APPROVED` state.
+Delivered the operational commercial Business and physical primary Outlet foundation for verified merchants:
+
+- **Precondition:** Accessible only after partner identity reaches `APPROVED` state.
 - **Domain Structure:** Follows `USER → MERCHANT PROFILE → BUSINESS → OUTLET`. Schema models Business-to-Outlet as one-to-many (1:N), while MVP UX strictly manages one Primary Outlet per Business.
-- **Setup Draft Lifecycle:** Introduces a mutable Business Setup Draft with autosave and resume capabilities before operational records are created.
+- **Setup Draft Lifecycle:** Delivered mutable Business Setup Draft with autosave and resume capabilities before operational records are created. Exactly one active setup draft per approved merchant.
 - **4-Step Setup Wizard:**
   - **Step 1 — Informasi Usaha:** Business name, category, and description (prefilled where appropriate from approved 2B submission, fully editable).
   - **Step 2 — Outlet Utama:** Primary Outlet name, contact phone, and physical fulfillment address (province, regency/city, district, village/subdistrict, detailed address, optional postal code; strictly separate from 2B correspondence address).
@@ -122,15 +124,16 @@ Phase 2C establishes the operational commercial Business and physical primary Ou
   - **Step 4 — Review & Complete:** Full operational review followed by atomic creation of Business, Primary Outlet, and Operating Hours within a single database transaction protected by idempotency and concurrency controls.
 - **Operational Mutability:** Business and Outlet entities are mutable operational records after setup. Edits never alter historical Phase 2B onboarding submissions.
 - **Suspension Preservation:** Admin suspension preserves existing Business, Outlet, and Operating Hours data without deletion or unlinking; reactivated merchants retain their operational setup.
-- **Mobile Gate Progression:** Extends TorangGo Mitra gate to distinguish between setup not started, setup draft in progress, and operational setup completed. UI explicitly avoids claiming "Toko Anda sudah aktif menerima pesanan" since Catalog and Order capabilities are not yet active.
+- **Mobile Gate Progression:** Extended TorangGo Mitra gate to distinguish between setup not started, setup draft in progress, and operational setup completed. UI explicitly avoids claiming "Toko Anda sudah aktif menerima pesanan" since Catalog and Order capabilities are not yet active.
 - **Operational Readiness Distinction:** `merchant_profile.status = APPROVED` represents identity approval, distinct from full operational readiness (which additionally requires Phase 2C setup, Phase 2D catalog/menu, and subsequent milestones).
-- **Admin Visibility:** Extends Admin merchant detail with read-only operational visibility; excludes admin editing of operational businesses.
-- **Strict Scope Firewall:** Excludes Catalog/Menu, products, pricing, stock, cart, checkout, orders, payments, driver matching, delivery radiuses/zones, wallet, ledger, and multi-outlet management.
-
+- **Admin Visibility:** Extended Admin merchant detail with read-only operational visibility; excludes admin editing of operational businesses.
+- **Strict Scope Firewall:** Excluded Catalog/Menu, products, pricing, stock, cart, checkout, orders, payments, driver matching, delivery radiuses/zones, wallet, ledger, and multi-outlet management.
 
 ### 2D — Catalog
 
-Deliver the concrete Food catalog and Merchant management experience, including item information, pricing, and availability as specified for this phase.
+**NEXT / NOT STARTED.** Detailed concept and design have not been approved.
+
+Planned scope is strictly confined to Food catalog, item information, pricing, availability, and Merchant catalog management. Do not present description/category fields or availability toggles as approved design decisions; those details await Phase 2D design. Do not invent schema, endpoints, stock model, variants, addons, upload policy, or other details prior to dedicated phase design approval.
 
 ### 2E — Customer Discovery + Address
 

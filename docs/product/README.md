@@ -30,6 +30,7 @@ Phase 2 — Core Commerce & Delivery is **IN PROGRESS**.
 - Phase 2A1 — Admin Core Foundation & RBAC Bootstrap is **COMPLETE / LOCKED** (checkpoint `ebb3838888b11ede5a4a150d5a590bbabc05a26a`).
 - Phase 2A2 — Admin Verification Workflow is **COMPLETE / LOCKED** (checkpoint `f54f20550a84d1ddced958f84a8b5be35eb5082e`).
 - Phase 2B — Merchant Onboarding is **COMPLETE / LOCKED** (checkpoint `63a1565140a35c7b9cb1bc48d09f0c83cebeaea3`, CI Run #10 = SUCCESS).
-- Phase 2C — Merchant Business + Single Outlet Foundation is **NEXT / NOT STARTED** (Phase 2C Concept Anchor v1.0 is **LOCKED**; implementation is **NOT STARTED**).
+- Phase 2C — Merchant Business + Single Outlet Foundation is **COMPLETE / LOCKED** (implementation checkpoint `50ec32fb716a14e74cfa54fa937c7f1a6df49f68`, follow-up whitespace checkpoint `5c14656bceb0955d431ffffba8a5607d496383d6`, CI Run #12 & #13 = SUCCESS per user anchor).
+- Phase 2D — Catalog is **NEXT / NOT STARTED** (Scope: Food catalog, item information, pricing, availability, and Merchant catalog management; detailed concept/design not yet approved).
 
-Current operational details and Git baseline are recorded in [HANDOFF.md](HANDOFF.md).
+The current Post-Phase 2C documentation reconciliation task is **IN PROGRESS / AWAITING AUDIT** (not self-approved or self-locked). Current operational details and Git baseline are recorded in [HANDOFF.md](HANDOFF.md).

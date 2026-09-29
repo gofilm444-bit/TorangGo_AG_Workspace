@@ -238,21 +238,22 @@ These 41 stable decision IDs record current product, architecture, and governanc
 
 **Status:** LOCKED
 
-**Decision:** Use exactly this governance workflow:
+**Decision:** Use exactly this governance workflow (clarified 2026-09-29):
 
 Master Prompt
-→ Agent implementation
-→ Agent verification
-→ HANDOFF
-→ ChatGPT audit
-→ canonical/full audit
-→ PASS / LOCK
-→ Git checkpoint
-→ push
-→ CI verification
-→ next phase
+→ AG Implementation
+→ AG Verification
+→ AG HANDOFF
+→ ChatGPT Audit
+→ Canonical / Full Audit
+→ PASS
+→ Git Checkpoint
+→ Push
+→ GitHub CI success
+→ COMPLETE & LOCKED
+→ Next Phase
 
-**Rationale / consequence:** Agents do not self-lock. This documentation task ends at verification and handoff; staging, committing, and pushing are not authorized. External audit/checkpoint must succeed before proceeding to the dedicated next-phase prompt.
+**Rationale / consequence:** AG cannot self-approve or self-lock. Documentation or implementation tasks end at AG verification and AG HANDOFF. After ChatGPT Audit and Canonical / Full Audit return PASS, staging, commit, and push require explicit checkpoint authorization. After the authorized commit and push, verify GitHub CI success for the exact pushed checkpoint SHA. Only then declare COMPLETE & LOCKED and advance to the next phase. Do not imply CI must succeed for a new checkpoint before that checkpoint is committed and pushed. This documentation correction task does not authorize staging, committing, or pushing.
 
 ## TG-DEC-031: Phase 2C Business Setup Begins Only After Merchant APPROVED
 

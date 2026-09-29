@@ -88,7 +88,7 @@ Driver Profile and Vehicle remain separate concepts; their onboarding belongs to
 
 ### Domain Separation: Phase 2B vs Phase 2C
 
-Phase 2B delivered and locked the **Merchant Onboarding & Identity** lifecycle. Phase 2C delivers the **Operational Business & Primary Outlet Setup** foundation. These two domains are strictly separated:
+Phase 2B delivered and locked the **Merchant Onboarding & Identity** lifecycle. Phase 2C delivered and locked the **Operational Business & Primary Outlet Setup** foundation. These two domains are strictly separated:
 
 1. **Onboarding Submission vs. Operational Entities:** Proposed business information and correspondence address collected in Phase 2B onboarding submissions serve as immutable historical verification evidence. They may prefill Phase 2C setup fields for convenience, but do not automatically create or become the final Business and Outlet records.
 2. **Setup Draft Lifecycle:** Phase 2C introduces a mutable Business Setup Draft (with autosave/resume) that must be completed before operational records exist. Exactly one active setup draft per approved Merchant is permitted for MVP.
@@ -147,7 +147,7 @@ Critical mutations require deliberate idempotency and consistency design, with v
 
 Keep credentials out of documentation and source. Protect password/MFA material appropriately and restrict access to verification documents; document schemas and access implementation require dedicated design, not invention in this recovery task.
 
-Follow the full governance workflow in TG-DEC-030. Agents implement and verify authorized scope, then provide a HANDOFF for external audit; they do not self-lock. This documentation task does not authorize staging, committing, pushing, or beginning the next implementation phase.
+Follow the full governance workflow in TG-DEC-030 (clarified 2026-09-29: Master Prompt → AG Implementation → AG Verification → AG HANDOFF → ChatGPT Audit → Canonical / Full Audit → PASS → Git Checkpoint → Push → GitHub CI success → COMPLETE & LOCKED → Next Phase). AG cannot self-approve or self-lock. After ChatGPT Audit and Canonical / Full Audit return PASS, staging, commit, and push require explicit checkpoint authorization. After the authorized commit and push, verify GitHub CI success for the exact pushed checkpoint SHA; only then declare COMPLETE & LOCKED and advance. Do not imply CI must succeed for a new checkpoint before that checkpoint is committed and pushed. This documentation correction task does not authorize staging, committing, pushing, or beginning the next implementation phase.
 
 ## Current Phase Status
 
@@ -161,12 +161,15 @@ Follow the full governance workflow in TG-DEC-030. Agents implement and verify a
 | Office Admin Security & Runtime Verification | COMPLETE / LOCKED |
 | Phase 2A2 — Admin Verification Workflow | COMPLETE / LOCKED |
 | Phase 2B — Merchant Onboarding | COMPLETE / LOCKED |
-| Phase 2C — Merchant Business + Single Outlet Foundation | NEXT / NOT STARTED |
+| Phase 2C — Merchant Business + Single Outlet Foundation | COMPLETE / LOCKED |
+| Phase 2D — Catalog | NEXT / NOT STARTED |
 
 Phase checkpoints:
 - Phase 2A1 functional checkpoint: `ebb3838888b11ede5a4a150d5a590bbabc05a26a`
 - Phase 2A2 verification checkpoint: `f54f20550a84d1ddced958f84a8b5be35eb5082e`
 - Phase 2B merchant onboarding checkpoint: `63a1565140a35c7b9cb1bc48d09f0c83cebeaea3` (CI Run #10: SUCCESS)
-- Phase 2C Concept Anchor v1.0 is **LOCKED**; implementation is **NOT STARTED**.
+- Phase 2C implementation checkpoint: `50ec32fb716a14e74cfa54fa937c7f1a6df49f68`
+- Phase 2C follow-up whitespace checkpoint: `5c14656bceb0955d431ffffba8a5607d496383d6` (CI Run #12 & #13: SUCCESS per user anchor)
+- Phase 2D — Catalog is **NEXT / NOT STARTED** (Scope: Food catalog, item information, pricing, availability, and Merchant catalog management; detailed concept/design not yet approved).
 
-Current repository HEAD and operational handoff details are recorded in [HANDOFF.md](HANDOFF.md).
+The current Post-Phase 2C documentation reconciliation task is **IN PROGRESS / AWAITING AUDIT** and does not self-lock. Current repository HEAD and operational handoff details are recorded in [HANDOFF.md](HANDOFF.md).
